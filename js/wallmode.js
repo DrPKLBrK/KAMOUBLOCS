@@ -38,16 +38,21 @@ function wmDraw(){
   const c0=C[0],f=F.length?F[WM.fix%F.length]:null,tries=wGet(k);
   const dis=CMP.find(c=>!c.agree&&!testDone(c.q,k)),T=dis?testFor(dis.q,x):null;
   const hn=h=>`n°${h.n} <span class="mut">(${esc(h.type.toLowerCase())})</span>`;
+  // v45 : sur tablette (écran tactile), « Flash ! » est en haut tant que c'est un flash ; dès le 2e essai il revient en bas.
+  // Sur ordinateur (souris), rien ne change.
+  const touch=!!(window.matchMedia&&matchMedia("(pointer: coarse)").matches),atTop=touch&&wTotal()<=1;
+  const sendH=`<section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">${wTotal()<=1?"Flash !":"Enchaîné en "+wTotal()+" essais"}</button></div><p class="mut" style="margin:6px 0 0">${wTotal()<=1?"Réussi du premier coup ? Touche « Flash ! ». Sinon, compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur.":"Le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>`;
   d.innerHTML=`<div class="wmin">
     <div class="wmtop"><button type="button" data-wm="prev" aria-label="Mouvement précédent"${k?"":" disabled"}>‹</button>
       <div class="wmt"><b>Mouvement ${k+1} / ${n}</b>${k===AN.crux?' <span class="pill pill-key">clé</span>':""}<small>${esc(stepTitle(k))}</small></div>
       <button type="button" data-wm="next" aria-label="Mouvement suivant"${k<n-1?"":" disabled"}>›</button><button type="button" data-wm="close" aria-label="Fermer le mode pied du mur">✕</button></div>
     <p class="wmh">Vers ${hn(m.h)}${m.pair?" et "+hn(m.pair.h):""} · main fixe ${hn(x.fixed.h)}</p>
+    ${atTop?sendH:""}
     <section><h3>Ce qui coince</h3>${c0?`<p class="wmbig">${esc(CAUSEN[c0.id])}</p><p>${esc(c0.why)}</p>${C[1]?`<p class="mut">Ensuite : ${C.slice(1,3).map(c=>esc(CAUSEN[c.id].toLowerCase())).join(", ")}.</p>`:""}`:`<p>Aucun point mécanique saillant à ta taille : vérifie le placement des pieds et du bassin.</p>`}</section>
     ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
     ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
     <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><button type="button" data-wm="minus" aria-label="Retirer un essai"${tries?"":" disabled"}>−</button><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div></section>
-    <section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">${wTotal()<=1?"Flash !":"Enchaîné en "+wTotal()+" essais"}</button></div><p class="mut" style="margin:6px 0 0">${wTotal()<=1?"Réussi du premier coup ? Touche « Flash ! ». Sinon, compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur.":"Le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>
+    ${atTop?"":sendH}
     <div class="wmrow"><button type="button" data-wm="done">Ce mouvement est passé</button></div>
     <p class="mut" id="wmmsg" role="status"></p></div>`;
   d.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>{const a=b.dataset.wm;
