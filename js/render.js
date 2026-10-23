@@ -66,5 +66,5 @@ function alignSolve(){
 }
 (function(){const go=()=>requestAnimationFrame(alignSolve),s=document.getElementById("wall");
   if(s&&window.MutationObserver)new MutationObserver(go).observe(s,{attributes:true,attributeFilter:["viewBox"],childList:true});
-  addEventListener("resize",go);if(window.ResizeObserver&&s)new ResizeObserver(go).observe(s);
+  addEventListener("resize",go);if(window.MutationObserver)new MutationObserver(go).observe(document.body,{attributes:true,attributeFilter:["class"]}); // passage mode ouverture / grimpeurif(window.ResizeObserver&&s)new ResizeObserver(go).observe(s);
   document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#modeseg,#views,#edopen,#editor"))setTimeout(go,50)})})();

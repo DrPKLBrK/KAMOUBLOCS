@@ -30,8 +30,14 @@ const lvOpts=()=>LVL.map((l,i)=>[i,l[0]]);
 function buildBar(){
   if(!ZONEN[CFG.zone])CFG.zone='all';
   const f=(id,t,list)=>`<label class="f" for="${id}"><span>${t}</span><select id="${id}">${optHtml(list,CFG[id==="lmin"?"lmin":id==="lmax"?"lmax":id])}</select></label>`;
-  $("bar").innerHTML=f("lmin","Niveau mini",lvOpts())+f("lmax","Niveau maxi",lvOpts())+f("mv","Style de mouvement",mvList())+f("hs","Type de prises",hsList())+f("zone","Zone du mur",Object.entries(ZONEN))+f("len","Longueur",Object.entries(LENN))+`<label class="f" for="climbsel"><span>Grimpeur</span><select id="climbsel"><option value="0"${PROF.on?"":" selected"}>Toutes tailles</option><option value="1"${PROF.on?" selected":""}>${climbName()}</option></select></label>`+
-    `<label class="sw"><input type="checkbox" id="lancers"${CFG.lancers?" checked":""}><span>Autoriser les lancers</span></label><button class="pri" id="go">Générer un bloc</button>`;
+  // v41 : l'essentiel visible (niveaux, style, Générer), le reste dans « Plus de réglages » (replié, avec un résumé)
+  $("bar").innerHTML=f("lmin","Niveau mini",lvOpts())+f("lmax","Niveau maxi",lvOpts())+f("mv","Style de mouvement",mvList())+`<button class="pri" id="go">Générer un bloc</button>`+
+    `<details class="moreset" id="moreset"${ls("moresetopen",false)===true?" open":""}><summary>Plus de réglages <small id="moresum"></small></summary><div class="bar">`+
+    f("hs","Type de prises",hsList())+f("zone","Zone du mur",Object.entries(ZONEN))+f("len","Longueur",Object.entries(LENN))+`<label class="f" for="climbsel"><span>Grimpeur</span><select id="climbsel"><option value="0"${PROF.on?"":" selected"}>Toutes tailles</option><option value="1"${PROF.on?" selected":""}>${climbName()}</option></select></label>`+
+    `<label class="sw"><input type="checkbox" id="lancers"${CFG.lancers?" checked":""}><span>Autoriser les lancers</span></label></div></details>`;
+  $("moreset").addEventListener("toggle",e=>ss("moresetopen",e.target.open));
+  const ms=()=>{const e=$("moresum");if(e)e.textContent=[HSN[CFG.hs]==="Libres"?"toutes prises":HSN[CFG.hs],ZONEN[CFG.zone],CFG.len==="any"?"longueur libre":LENN[CFG.len].toLowerCase(),PROF.on?climbName().toLowerCase():"toutes tailles",CFG.lancers?"lancers permis":"sans lancers"].filter(Boolean).join(" · ")};ms();
+  $("bar").addEventListener("change",()=>setTimeout(ms,0));
   for(const k of["lmin","lmax","mv","hs","zone","len"])$(k).onchange=e=>{CFG[k]=k==="lmin"||k==="lmax"?+e.target.value:e.target.value;saveCfg();if(k==="zone")refreshMenus()};
   $("climbsel").onchange=e=>{PROF.on=e.target.value==="1";saveClimber()};
   $("lancers").onchange=e=>{CFG.lancers=e.target.checked;refreshMenus()};
@@ -69,7 +75,7 @@ function autoView(r){
 // ---------- Favoris ----------
 const favs=()=>ls(KEY.favs,[]);
 function renderFavs(){
-  const a=favs(),d=$("favs");
+  const a=favs(),d=$("favs"),fn=$("favn");if(fn)fn.textContent=a.length?`(${a.length})`:"aucun pour l'instant";
   if(!a.length){d.innerHTML='<p class="mut">Aucun bloc sauvegardé. Génère un bloc puis choisis « Sauvegarder ce bloc ».</p>';return}
   d.innerHTML=a.map((r,i)=>`<span class="fav"><button data-open="${i}">Bloc ${i+1} · ${lab(r.idx)} · ${KINDN[r.kind]}</button><button class="x" data-del="${i}" aria-label="Supprimer le bloc ${i+1}">×</button></span>`).join("");
   d.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{autoView(a[+b.dataset.open]);show(a[+b.dataset.open])});
@@ -116,6 +122,7 @@ function tabPrises(flt=""){
 function tabAff(){
   return `<div class="row"><label class="sw"><input type="checkbox" id="zoom"${CFG.zoom?" checked":""}><span>Agrandir les prises sur le mur (lisibilité)</span></label>
   <label class="f" for="theme"><span>Thème</span><select id="theme">${optHtml([["auto","Automatique"],["light","Clair"],["dark","Sombre"]],CFG.theme)}</select></label></div>
+  <div class="row"><button id="edgo" class="pri">Personnaliser l'apparence</button><span class="mut">Couleurs, polices, formes, mur, mise en page.</span></div>
   <div class="row"><label class="sw"><input type="checkbox" id="expert"${CFG.expert?" checked":""}><span>Mode expert : afficher le benchmark du générateur, le tableau de bord de calibration et l'export des blocs en .json</span></label></div>
   <div class="row"><button id="wipe">Effacer l'historique de variété</button><span class="mut">Remet à zéro la mémoire qui évite de refaire les mêmes blocs.</span></div>${backupHtml()}`;
 }
@@ -156,6 +163,7 @@ function renderTab(flt){
   }else{
     $("zoom").onchange=e=>{CFG.zoom=e.target.checked;saveCfg();drawWall(cur)};
     $("theme").onchange=e=>{CFG.theme=e.target.value;saveCfg();applyTheme()};
+    $("edgo").onclick=()=>{const b=$("edopen");if(b)b.click()};
     $("expert").onchange=e=>{CFG.expert=e.target.checked;saveCfg();applyExpert()};
     bindBackup();
     $("wipe").onclick=()=>{ss(KEY.hist,[]);ss(KEY.heat,{});$("wipe").textContent="Historique effacé"};
@@ -176,28 +184,37 @@ function buildWallTabs(){
 let pendingRate=null; // note choisie pour le bloc affiché, avant enregistrement
 const fmtD=ts=>new Date(ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 const sgn=v=>(v>0?"+":"")+v.toFixed(1);
+// Barre « Ton essai » (v41), juste sous le mur : enchaîné, ressenti, avis, enregistrer ; le reste dans « Plus de détails ».
+let pendingSent=null;
 function renderRate(){
-  const d=$("rate");
+  const d=$("rate");if(!d)return;
   if(!cur){d.innerHTML='<p class="mut">Génère un bloc pour pouvoir le noter.</p>';return}
   const done=notes().find(t=>t.id===cur.id);
   if(pendingRate==null&&done)pendingRate=done.rating;
-  const vt=voteOf(cur),nm=cur.moves||0;
-  d.innerHTML=`<div class="vote"><span class="mut">Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div><span class="mut" id="vmsg">${vt?"Avis enregistré : le générateur en tient compte.":"Ton avis oriente les prochains blocs (voir « Mes goûts »)."}</span></div>
-  <p class="mut" style="margin:0 0 6px">Bloc affiché : estimé <b>${lab(cur.idx)}</b>${done?` · déjà noté <b>${NOTE_N[done.rating]}</b> (tu peux corriger)`:""}</p>
-  <div class="rate"><div class="seg" role="group" aria-label="Ressenti après essai">${NOTE_N.map((n,i)=>`<button data-r="${i}" aria-pressed="${pendingRate===i}">${n}</button>`).join("")}</div>
+  if(d.dataset.bid!==String(cur.id)){d.dataset.bid=String(cur.id);pendingSent=done&&done.sent!=null?done.sent:null}
+  const vt=voteOf(cur),nm=cur.moves||0,more=ls("trymore",false)===true;
+  d.innerHTML=`<h3>Ton essai <span class="mut" style="font:400 .85rem var(--body)">· bloc estimé ${lab(cur.idx)}${done?` · déjà noté ${NOTE_N[done.rating]} (tu peux corriger)`:""}</span></h3>
+  <div class="tryq">
+    <div class="grp"><span>Enchaîné ?</span><div class="seg" role="group" aria-label="Enchaîné ?"><button data-s="1" aria-pressed="${pendingSent===true}">Oui</button><button data-s="0" aria-pressed="${pendingSent===false}">Pas encore</button></div></div>
+    <div class="grp"><span>Ressenti</span><div class="seg" role="group" aria-label="Ressenti après essai">${NOTE_N.map((n,i)=>`<button data-r="${i}" aria-pressed="${pendingRate===i}">${n}</button>`).join("")}</div></div>
+    <div class="grp"><span>Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div></div>
+    <button class="pri" id="nsave"${pendingRate==null?" disabled":""} title="${pendingRate==null?"Choisis d'abord ton ressenti":""}">${done?"Mettre à jour":"Enregistrer"}</button>
+  </div>
+  <details class="trymore" id="trymore"${more?" open":""}><summary>Plus de détails : passage le plus dur, cotation, commentaire</summary><div class="rate">
   <label class="f" for="ncrux"><span>Passage le plus dur selon toi</span><select id="ncrux"><option value="">Pas d'avis</option>${Array.from({length:nm},(_,i)=>`<option value="${i}"${done&&done.crux===i?" selected":""}>Mouvement ${i+1}${cur.key&&cur.key.k===i?" (annoncé)":""}</option>`).join("")}</select></label>
-  <label class="f" for="nsent"><span>Enchaîné ?</span><select id="nsent"><option value="">Pas d'avis</option><option value="1"${done&&done.sent===true?" selected":""}>Oui</option><option value="0"${done&&done.sent===false?" selected":""}>Pas encore</option></select></label>
   <label class="f" for="nfont"><span>Cotation ressentie</span><select id="nfont"><option value="">Pas d'avis</option>${FONT.map(g=>`<option${done&&done.font===g?" selected":""}>${g}</option>`).join("")}</select></label>
   <label class="f" for="ncom" style="flex:1 1 220px"><span>Commentaire (facultatif)</span><input id="ncom" type="text" maxlength="120" placeholder="Ex. le 3e mouvement est bien plus dur" value="${esc(done?done.comment||"":"")}"></label>
-  <button class="pri" id="nsave"${pendingRate==null?" disabled":""}>${done?"Mettre à jour la note":"Enregistrer la note"}</button></div>`;
-  d.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v;votePref(cur,voteOf(cur)===v?0:v);renderRate();renderTaste()});
-  d.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{pendingRate=+b.dataset.r;d.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("nsave").disabled=false});
+  </div></details><span class="mut" id="vmsg" role="status"></span>`;
+  $("trymore").addEventListener("toggle",e=>ss("trymore",e.target.open));
+  d.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v;votePref(cur,voteOf(cur)===v?0:v);renderRate();renderTaste();const m=$("vmsg");if(m)m.textContent=voteOf(cur)?"Avis enregistré : le générateur en tient compte.":""});
+  d.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{const v=b.dataset.s==="1";pendingSent=pendingSent===v?null:v;d.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(pendingSent!==null&&(x.dataset.s==="1")===pendingSent)))});
+  d.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{pendingRate=+b.dataset.r;d.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("nsave").disabled=false;$("nsave").title=""});
   $("nsave").onclick=()=>{
     if(pendingRate==null||!cur)return;
     if(!cur.id)cur.id=Date.now().toString(36);
-    const t={id:cur.id,ts:Date.now(),rating:pendingRate,comment:$("ncom").value.trim(),idx:cur.idx,mv:cur.mv,kind:cur.kind,hands:[...new Set(cur.hands.map(x=>x.n))],block:cur,crux:$("ncrux").value===""?null:+$("ncrux").value,key:cur.key?cur.key.k:null,sent:$("nsent").value===""?null:$("nsent").value==="1",font:$("nfont").value||null};
+    const t={id:cur.id,ts:Date.now(),rating:pendingRate,comment:$("ncom").value.trim(),idx:cur.idx,mv:cur.mv,kind:cur.kind,hands:[...new Set(cur.hands.map(x=>x.n))],block:cur,crux:$("ncrux").value===""?null:+$("ncrux").value,key:cur.key?cur.key.k:null,sent:pendingSent,font:$("nfont").value||null};
     const a=notes().filter(x=>x.id!==t.id);a.push(t);ss(KEY.notes,a.slice(-300));
-    replay();renderNotes();renderRate();$("nsave").textContent="Note enregistrée";
+    replay();renderNotes();renderRate();$("nsave").textContent="✓ Note enregistrée";
   };
 }
 // Correspondance niveau / cotation (grade.js, 2.2)

@@ -11,9 +11,14 @@ function bootReport(){
 }
 [["apprentissage",replay],["goûts",prefReplay],["thème",applyTheme],["mode expert",applyExpert],["personnalisation",edInit],["bandeau",buildBar],["menus",refreshMenus],["réglages",buildSettings],["murs",buildWallTabs],["ouverture",bindOpening],["benchmark",bindBench],["mode",syncMode],["favoris",renderFavs],["notes",renderNotes],["note du bloc",renderRate],["goûts (affichage)",renderTaste]].forEach(([n,f])=>boot(n,f));
 boot("boutons",()=>{
-  $("save").onclick=()=>{if(!cur)return;ss(KEY.favs,[...favs(),cur]);if(!voteOf(cur))votePref(cur,1);renderFavs();renderRate();renderTaste()};
-  $("opensolve").onclick=()=>openSolver(null);
+  // « Blocs sauvegardés » est replié : le bouton confirme lui-même la sauvegarde
+  $("save").onclick=()=>{if(!cur)return;ss(KEY.favs,[...favs(),cur]);if(!voteOf(cur))votePref(cur,1);renderFavs();renderRate();renderTaste();
+    const b=$("save");b.textContent="✓ Sauvegardé ("+favs().length+")";clearTimeout(b._t);b._t=setTimeout(()=>{b.textContent="Sauvegarder ce bloc"},2500)};
   $("cbprint").onclick=()=>window.print();
+  // panneaux repliables (v41) : ouvert ou fermé, retenu d'une fois sur l'autre
+  document.querySelectorAll("details.fold[data-k]").forEach(d=>{d.open=ls(d.dataset.k,false)===true;d.addEventListener("toggle",()=>ss(d.dataset.k,d.open))});
+  // plan de montage : masquer les prises déjà posées
+  const hp=$("hideposed");if(hp){hp.checked=ls("hideposed",false)===true;const ap=()=>$("mont").classList.toggle("hideposed",hp.checked);ap();hp.onchange=()=>{ss("hideposed",hp.checked);ap()}}
   // en-tête du bloc : ouvert ou replié, mémorisé pour la prochaine fois
   const md=$("metd");if(md)md.addEventListener("toggle",()=>{if(cur)ss("metopen",md.open)});
   // lexique : toucher un mot en pointillé affiche son explication juste en dessous (le survol ne marche pas au doigt)

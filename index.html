@@ -2,7 +2,7 @@
 <html lang="fr"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Générateur de blocs</title>
+<title>KAMOUBLOCS</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0a6d78">
 <link rel="manifest" href="manifest.webmanifest">
@@ -221,19 +221,33 @@ body:not(.climbmode) .climbonly{display:none!important}
 .wallbar #cbshare{margin-left:auto}
 .cbright{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:flex-end}
 .sscol>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.sscol>summary h2{display:inline}.sscol[open]>summary{margin-bottom:8px}
+.seg button{white-space:nowrap}
+@media (min-width:701px) and (max-width:979px){.wallbar{grid-template-columns:auto 1fr auto!important;row-gap:10px}.wallbar #views{grid-column:1;grid-row:1}.wallbar #cbshare{grid-column:3;grid-row:1}.wallbar #modeseg{grid-column:1/-1;grid-row:2;justify-self:center}} /* tablette portrait : vue + Partager sur la 1re ligne, modes centrés dessous */
 @media (min-width:701px){.wallbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}.wallbar #views{justify-self:start}.wallbar #modeseg{justify-self:center}.wallbar #cbshare{justify-self:end;margin-left:0}}
 @media (max-width:700px){.wallbar #modeseg{margin-inline:auto}}
 /* 2e ligne de la barre du mur (v37) : « Résoudre ce bloc » centré dans l'espace libre à gauche de « Sauvegarder / Imprimer » */
 .cbrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .cbrow #codebar{flex:1 1 auto;justify-content:center;min-width:0}.cbrow .cbright{margin-left:0}.cbrow #cbmsg:empty{display:none}
 @media (min-width:701px){.cbrow #codebar{position:relative;min-height:40px}.cbrow #cbfile{position:absolute;left:0;top:50%;transform:translateY(-50%)}} /* mode expert : « Exporter » calé à gauche, « Résoudre » reste centré */
+/* v41 : en-tête de section repliable, note sous le mur, prises posées masquables, Personnaliser rangé */
+.foldsum{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.foldsum h2{display:inline}details.fold[open]>.foldsum{margin-bottom:6px}
+#tastebox #taste>h4:first-child,#calbox #solvecal h4{display:none}#calbox .tune{border:0;padding:0;margin:6px 0 0}
+.tryrow{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.tryrow h3{font:700 1rem var(--display);margin:0 0 8px}
+.tryq{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:end}.tryq .grp{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--mut)}
+.trymore{margin-top:8px}.trymore>summary{font-size:.92rem;color:var(--mut)}.trymore .rate{margin-top:6px}
+#mont.hideposed li:has(.mt input:checked){display:none}
+.fab{display:none!important}
+#bar{grid-template-columns:repeat(4,minmax(0,1fr))}#bar>.pri{align-self:end}#bar .moreset .bar{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+@media (max-width:700px){#bar{grid-template-columns:1fr 1fr}#bar>.pri{grid-column:1/-1}}
+.moreset{grid-column:1/-1}.moreset>summary{font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.moreset>summary small{font-weight:400;color:var(--mut)}.moreset .bar{margin-top:10px}
+@media print{.tryrow{display:none!important}}
 .legrow{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;justify-content:space-between;margin-top:8px}.legrow .leg{flex:1 1 320px;min-width:0;margin-top:0}.legrow #wmgo{flex:none;margin-left:auto}
 @media print{#wmgo{display:none!important}}
 .devwarn{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:10px;padding:10px 12px}
 </style>
 </head><body>
 <div class="page" id="page">
-<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v40</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
+<header data-sec="head" data-span="full"><h1>KAMOUBLOCS <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v41</small></h1><p class="sub">Des blocs pour tout ton mur, expliqués et vérifiés.</p></header>
 
 <section class="panel" data-sec="bar" data-span="full" aria-label="Réglages du bloc"><div class="bar" id="bar"></div><div id="focusbox"></div></section>
 <section class="panel" data-sec="session" data-span="full" id="session" aria-label="Séances et progression"></section>
@@ -249,6 +263,7 @@ body:not(.climbmode) .climbonly{display:none!important}
 <div class="openbar cbrow"><div class="openbar" id="codebar" style="margin:0"></div><span class="cbright"><button id="save">Sauvegarder ce bloc</button><button id="cbprint">Imprimer</button></span></div>
 <div class="svgw"><svg id="wall" viewBox="-5 -5 513 285" role="img" aria-label="Schéma du mur et du bloc"></svg></div>
 <div class="legrow"><div class="leg"><span><i style="background:var(--start)"></i>Départ (D)</span><span><i style="background:var(--hand)"></i>Main (ordre 1, 2, 3…)</span><span><i style="background:var(--finish)"></i>Arrivée (A)</span><span><i style="background:var(--foot)"></i>Pied</span><span>Prises à l'échelle, tournées comme à monter (0° = comme sur la photo, sens anti-horaire)</span></div></div>
+<div class="tryrow" id="rate"></div>
 <div class="openbar" id="openbar"><label class="sw"><input type="checkbox" id="multi"><span>Ouvrir plusieurs blocs sur le mur : ne plus proposer les prises cochées « posées »</span></label><span class="mut" id="posedinfo"></span><button id="posedreset">Tout démonter</button></div>
 <div class="hidebar"><span>Affichage :</span><label class="sw"><input type="checkbox" data-showsec="seq" checked><span>Montrer le déroulé</span></label><label class="sw"><input type="checkbox" data-showsec="mount" checked><span>Montrer le plan de montage</span></label></div>
 </section>
@@ -256,16 +271,16 @@ body:not(.climbmode) .climbonly{display:none!important}
 <section class="panel" data-sec="seq" data-span="half"><h2>Déroulé</h2><ol class="seq" id="seq"></ol></section>
 
 <section class="panel" data-sec="mount" data-span="half"><div class="h2row"><h2>Plan de montage</h2><span class="prog" id="prog"></span></div>
-<div class="seg" role="group" aria-label="Tri du plan de montage"><button data-sort="n" aria-pressed="true">Par numéro</button><button data-sort="pos" aria-pressed="false">Par emplacement</button></div>
+<div class="seg" role="group" aria-label="Tri du plan de montage"><button data-sort="n" aria-pressed="true">Par numéro</button><button data-sort="pos" aria-pressed="false">Par emplacement</button></div><label class="sw" style="margin-top:6px"><input type="checkbox" id="hideposed"><span>Masquer les prises posées</span></label>
 <ul class="mount" id="mont"></ul></section>
 
 <details class="panel v3" data-sec="v3" data-span="full"><summary><b>Contrôle de faisabilité</b><span id="v3sum"></span></summary><div id="v3"></div></details>
 
-<section class="panel" data-sec="favs" data-span="full"><h2>Blocs sauvegardés</h2><div id="favs" style="margin-top:10px"></div></section>
+<details class="panel fold" data-sec="favs" data-span="full" id="favbox" data-k="favboxopen"><summary class="foldsum"><h2>Blocs sauvegardés</h2><span class="mut" id="favn"></span></summary><div id="favs" style="margin-top:10px"></div></details>
 
 <section class="panel" data-sec="notes" data-span="full" id="notes" aria-label="Notes et apprentissage"><h2>Notes et apprentissage</h2>
 <p class="mut">Alors, T'en as chié !? Et ouais moi j'dois savoir pour te proposer bien pire !</p>
-<div id="rate"></div><div id="taste"></div><div id="nsum"></div><div id="solvecal"></div><div id="nlist"></div></section>
+<div id="nsum"></div><div id="nlist"></div><details class="ssh fold" id="tastebox" data-k="tasteboxopen"><summary>Mes goûts</summary><div id="taste"></div></details><details class="ssh fold" id="calbox" data-k="calboxopen"><summary>Corrections du résolveur</summary><div id="solvecal"></div></details></section>
 <section class="panel" data-sec="calib" data-span="full" id="calib" aria-label="Tableau de bord de calibration"></section>
 
 <section class="panel" data-sec="bench" data-span="full" aria-label="Benchmark du générateur"><h2>Benchmark du générateur</h2>
