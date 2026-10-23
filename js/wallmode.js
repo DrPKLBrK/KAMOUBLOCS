@@ -12,7 +12,13 @@ function wSet(k,n){const a=wTries();a[BID]=a[BID]||{};a[BID][k]=Math.max(0,n);ss
 let WM={fix:0};
 function wmOpen(){WM={fix:0};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
   d.hidden=false;document.documentElement.classList.add("wmon");wmDraw()}
-function wmClose(){const d=$("wm");if(d)d.hidden=true;document.documentElement.classList.remove("wmon");update();renderHist()}
+// retour au générateur quand le mode pied du mur a été ouvert depuis le mode grimpeur
+function wmBack(){
+  try{if(window.parent!==window){const ov=parent.document.getElementById("gbsv");if(ov){const b=ov.querySelector("button");if(b){b.click();return}}}}catch(e){}
+  try{if(window.opener&&!window.opener.closed){window.opener.focus();window.close();return}}catch(e){}
+  const g=ls("gen_page",null);location.href=typeof g==="string"&&/\.html?$/i.test(g)?encodeURIComponent(g):"index.html";
+}
+function wmClose(){if(typeof WMONLY!=="undefined"&&WMONLY){const d=$("wm");if(d)d.hidden=true;wmBack();return}const d=$("wm");if(d)d.hidden=true;document.documentElement.classList.remove("wmon");update();renderHist()}
 function wmDraw(){
   const d=$("wm"),k=SEL.k,x=AN.M[k],m=x.m,n=AN.M.length;
   const DGk=diagnose(AN,k,SEL.sym),CMP=AN.CMP[k],MC=mergeCauses(DGk,CMP,x,SEL.sym),C=MC.filter(c=>c.score>=.2),F=fixesOf({C:MC},workedCount());

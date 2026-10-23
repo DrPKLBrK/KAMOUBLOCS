@@ -10,6 +10,7 @@ makeReq=(function(base){return function(){const c=base(),o=REQ_OVER;REQ_OVER=nul
   const r=Object.assign({},c);
   if(o.mv){r.mv=o.mv;r.surp=o.mv==="surprise";if(o.mv==="dyno"||o.mv==="coord")r.lancers=true}
   if(o.hs)r.hs=o.hs;if(o.len!==undefined)r.len=o.len;
+  if(o.zone)r.zone=o.zone;if(o.kind)r.kind=o.kind;if(o.lancers!==undefined){r.lancers=o.lancers;r.pool=(r.pool||[]).filter(k=>o.lancers||(k!=="dyno"&&k!=="coord"))}
   if(o.tgt!=null)r.tgt=o.tgt;
   if(o.lv!=null){const L=LVL[clamp(o.lv,0,LVL.length-1)];r.tgt=L[1]+Math.random()*(L[2]-L[1])}
   if(o.dl)r.tgt=Math.max(.4,r.tgt+o.dl);

@@ -48,6 +48,8 @@ const LENGTHS={short:{tgt:200,div:1.3},mid:{tgt:320,div:1},long:{tgt:470,div:.78
 function makeRoute(c,heat){
   const hasJ=WALL.joints.length>0;let kinds=c.mv==='trav'?['trav']:c.mv==='compress'&&hasJ?['corner']:['up','up','trav','trav','diag','diag',...(hasJ?['corner']:['zig']),'zig'];
   kinds=tuneKinds(kinds);
+  // forme de parcours imposée (bloc recréé d'après un autre mur, adapt.js) ; « coin » seulement si ce mur a une jonction
+  if(c.kind&&KINDN[c.kind]&&(c.kind!=='corner'||hasJ))kinds=[c.kind];
   const z=zoneRange(c.zone),k0=ZONES.all,L=LENGTHS[c.len]||null;
   if(c.zone==='C'&&c.mv!=='trav'&&c.mv!=='compress')kinds=tuneKinds(['up','up','diag','corner','zig']);
   const zSame=z[0]===k0[0]&&z[1]===k0[1];

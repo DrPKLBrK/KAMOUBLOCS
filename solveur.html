@@ -163,6 +163,7 @@ ul.cal{margin:0;padding-left:18px;font-size:.92rem;display:flex;flex-direction:c
 .rmode{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
 .cmpl{margin:8px 0 0 1.1rem;padding:0}.cmpl li{margin:6px 0}
 html.wmon,html.wmon body{overflow:hidden}
+html.wmonly .page{visibility:hidden} /* ouvert depuis le mode grimpeur : seul le mode pied du mur est montré */
 .wm{position:fixed;inset:0;z-index:9000;background:var(--bg);overflow:auto;padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .wmin{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .wm section{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
@@ -177,7 +178,7 @@ html.wmon,html.wmon body{overflow:hidden}
 </style>
 <div class="page">
 <header class="top">
-  <div><h1>Résolveur de blocs <small class="ver">v30</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
+  <div><h1>Résolveur de blocs <small class="ver">v31</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
   <div class="acts"><a class="btnl" id="togen" href="index.html">Générateur</a></div>
 </header>
 
@@ -216,7 +217,7 @@ html.wmon,html.wmon body{overflow:hidden}
     <div class="chips" id="syms"></div>
   </section>
   <section class="panel">
-    <div class="rmode" id="rmode"><div class="seg" role="group" aria-label="Niveau de détail du rapport"><button type="button" data-rm="ess">Essentiel</button><button type="button" data-rm="det">Détaillé</button></div><button type="button" class="pri" id="wmopen">Mode pied du mur</button></div>
+    <div class="rmode" id="rmode"><div class="seg" role="group" aria-label="Niveau de détail du rapport"><button type="button" data-rm="ess">Essentiel</button><button type="button" data-rm="det">Détaillé</button></div><button type="button" class="pri" id="wmopen" hidden>Mode pied du mur</button></div>
     <div class="report" id="report" aria-live="polite"></div>
     <div class="racts" style="margin-top:16px"><button type="button" class="pri" id="keep">Garder dans mon suivi</button><button type="button" id="copy">Copier le rapport</button><span class="mut" id="savemsg" role="status"></span></div>
     <textarea id="copyta" hidden aria-label="Texte du rapport"></textarea>

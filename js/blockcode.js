@@ -96,8 +96,11 @@ async function openShared(){
     setTimeout(()=>{if(sec)sec.scrollIntoView({block:"start"})},50);
     return true;
   }
-  note.innerHTML=`Ce bloc a été ouvert sur un autre mur ou avec d'autres prises que les tiennes, le générateur ne peut pas le poser ici. <button id="shsolve" class="pri">L'ouvrir dans le résolveur</button>`;
+  // autre mur ou autres prises : on recrée le bloc sur ce mur (adapt.js), l'original reste consultable dans le résolveur
+  const canAdapt=typeof adaptBlock==="function";
+  note.innerHTML=`<b>Ce bloc vient d'un autre mur${(o.wall&&o.wall.name)?" (« "+esc(o.wall.name)+" »)":""}.</b> ${canAdapt?"Ses prises ne sont pas les tiennes : il est recréé ci-dessous sur ton mur, avec le même style, le même niveau et la même longueur, et vérifié pour ton mur.":"Le générateur ne peut pas le poser ici."} <button id="shsolve">Voir l'original dans le résolveur</button>`;
   if(sec)sec.insertBefore(note,sec.firstChild);
   const b=$("shsolve");if(b)b.onclick=()=>openSolver("GB1-"+b64u(JSON.stringify(o.c)));
+  if(canAdapt){adaptBlock(o.r);if(typeof genCount!=="undefined")genCount++;setTimeout(()=>{if(sec)sec.scrollIntoView({block:"start"})},50);return true}
   return false;
 }

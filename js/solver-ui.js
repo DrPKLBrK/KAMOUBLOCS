@@ -1,6 +1,7 @@
 // SOLVER-UI : interface du résolveur (chargement du bloc, profil, choix du blocage, rapport, suivi).
 const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const SEL={k:0,sym:new Set(),zoom:true};
+let WMONLY=false; // ouvert seulement pour le mode pied du mur (depuis le mode grimpeur du générateur)
 let CODE="",SRC="",DG=null,BID="",CUR=null;
 const hashStr=t=>{let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return(h>>>0).toString(36)};
 
@@ -221,6 +222,10 @@ function init(){
   if(!ls(SVP_KEY,null)&&blockClimber()){SP.H=Math.round(blockClimber().H);SP.ape=Math.round((blockClimber().ape||1)*100)} // même grimpeur que le profil du générateur
   calReplay();analyze();SEL.k=AN.crux;
   renderProf();bindProf();bindNotes();renderHead();update();renderHist();bindLoad();bindBackup();
+  // mode pied du mur demandé depuis le mode grimpeur du générateur : il s'ouvre seul, et le fermer ramène au générateur
+  try{WMONLY=localStorage.getItem("solve_wm")==="1";localStorage.removeItem("solve_wm")}catch(e){}
+  // wallmode.js est chargé après ce fichier : on attend qu'il soit là avant d'ouvrir
+  if(WMONLY){document.documentElement.classList.add("wmonly");let n=0;const go=()=>{if(typeof wmOpen==="function")wmOpen();else if(n++<100)setTimeout(go,30)};go()}
   if(window.SV_EMBED)$("togen").hidden=true;
   else{const t=$("togen"),g=ls("gen_page",null);if(typeof g==="string"&&/\.html?$/i.test(g))t.href=encodeURIComponent(g);
     // ouvert depuis le générateur (nouvel onglet) : on y revient au lieu d'ouvrir une deuxième copie
