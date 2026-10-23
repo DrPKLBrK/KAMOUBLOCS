@@ -39,14 +39,13 @@ function parseBlockCode(t){
   t=String(t||"").trim();if(t.indexOf("GB1-")===0)t=unb64u(t.slice(4));
   const o=JSON.parse(t);if(!o||o.app!=="generateur-blocs"||!o.seq)throw new Error("Code de bloc invalide");return o;
 }
-// Barre sous le bloc : copier le code, exporter un fichier, résoudre le bloc, partager, imprimer (la graine n'est plus affichée depuis la v32).
+// Barre sous le bloc : exporter un fichier, résoudre le bloc, partager, imprimer (la graine n'est plus affichée depuis la v32).
 function downloadText(name,txt,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:type||"application/json"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function renderCodeBar(r){
   const d=$("codebar");if(!d)return;
   if(!r||!r.seq){d.innerHTML="";return}
-  d.innerHTML=`<button id="cbcopy">Copier le code du bloc</button><button id="cbfile">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><button id="cbshare" class="pri">Partager le bloc</button><button id="cbprint">Imprimer</button><span class="mut" id="cbmsg" role="status"></span>`;
+  d.innerHTML=`<button id="cbfile">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><span class="mut" id="cbmsg" role="status"></span><span class="cbright"><button id="cbshare" class="pri">Partager le bloc</button><button id="cbprint">Imprimer</button></span>`;
   const msg=t=>{$("cbmsg").textContent=t;setTimeout(()=>{if($("cbmsg"))$("cbmsg").textContent=""},2500)};
-  $("cbcopy").onclick=async()=>{const c=blockCode(r);try{await navigator.clipboard.writeText(c);msg("Code copié ("+c.length+" caractères)")}catch(e){const t=document.createElement("textarea");t.value=c;document.body.appendChild(t);t.select();try{document.execCommand("copy");msg("Code copié")}catch(_){msg("Copie impossible : utilise Exporter")}t.remove()}};
   $("cbfile").onclick=()=>downloadText("bloc-"+(r.seed||r.id||"x")+".json",JSON.stringify(blockObject(r),null,1));
   $("cbsolve").onclick=()=>openSolver(blockCode(r));
   $("cbprint").onclick=()=>window.print();
