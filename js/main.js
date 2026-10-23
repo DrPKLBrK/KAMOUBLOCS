@@ -16,8 +16,6 @@ boot("boutons",()=>{
   $("cbprint").onclick=()=>window.print();
   // en-tête du bloc : ouvert ou replié, mémorisé pour la prochaine fois
   const md=$("metd");if(md)md.addEventListener("toggle",()=>{if(cur)ss("metopen",md.open)});
-  // mode pied du mur : réservé au mode grimpeur, il s'ouvre directement (sans le rapport du résolveur)
-  $("wmgo").onclick=()=>{if(!cur)return;try{localStorage.setItem("solve_wm","1")}catch(e){}openSolver(blockCode(cur))};
   // lexique : toucher un mot en pointillé affiche son explication juste en dessous (le survol ne marche pas au doigt)
   // l'explication va à la fin de la ligne (et non au milieu de la phrase) ; retoucher le même mot la referme
   const glTog=a=>{const box=a.closest(".t,.s")||a.parentElement,old=[...box.children].find(x=>x.classList.contains("glpop"));

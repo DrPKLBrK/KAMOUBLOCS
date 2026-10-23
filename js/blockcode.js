@@ -45,10 +45,12 @@ function renderCodeBar(r){
   const d=$("codebar");if(!d)return;
   const sh=$("cbshare");if(sh)sh.disabled=!r||!r.seq; // « Partager » est en haut à droite (barre du mur), hors de cette barre
   if(!r||!r.seq){d.innerHTML="";return}
-  d.innerHTML=`<button id="cbfile" class="expertonly" title="Fichier complet du bloc (archive, débogage)">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><span class="mut" id="cbmsg" role="status"></span>`;
+  d.innerHTML=`<button id="cbfile" class="expertonly" title="Fichier complet du bloc (archive, débogage)">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><button id="wmgo" class="pri climbonly" title="Écran simplifié pour grimper : un mouvement à la fois, la cause et la méthode à essayer, un compteur d'essais">Mode pied du mur</button><span class="mut" id="cbmsg" role="status"></span>`;
   const msg=t=>{$("cbmsg").textContent=t;setTimeout(()=>{if($("cbmsg"))$("cbmsg").textContent=""},2500)};
   $("cbfile").onclick=()=>downloadText("bloc-"+(r.seed||r.id||"x")+".json",JSON.stringify(blockObject(r),null,1));
   $("cbsolve").onclick=()=>openSolver(blockCode(r));
+  // mode grimpeur : « Mode pied du mur » prend exactement la place de « Résoudre ce bloc » (v39)
+  $("wmgo").onclick=()=>{try{localStorage.setItem("solve_wm","1")}catch(e){}openSolver(blockCode(r))};
   if(typeof alignSolve==="function")requestAnimationFrame(alignSolve);
   $("cbshare").onclick=async()=>{
     let url;try{url=await shareLink(r)}catch(e){msg("Lien impossible à créer : utilise « Copier le code du bloc »");return}

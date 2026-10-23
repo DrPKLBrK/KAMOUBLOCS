@@ -49,9 +49,10 @@ const drawWall=r=>{const s=$("wall");s.setAttribute("viewBox",vbFor(wallView));s
 // « Résoudre ce bloc » centré au-dessus du pan de gauche du dessin (v37) ; mur entier ou vue d'un seul pan : centré sur le dessin.
 // Sur téléphone (dessin plus large que l'écran, défilement horizontal) : simplement centré dans sa ligne.
 function alignSolve(){
-  const b=$("cbsolve"),cb=$("codebar"),svg=$("wall");if(!b||!cb||!svg)return;
-  b.style.marginLeft="";cb.style.justifyContent="";b.style.transform="";
-  if(innerWidth<=700||!b.offsetParent)return;
+  // le bouton visible : « Résoudre ce bloc » (mode ouverture) ou « Mode pied du mur » (mode grimpeur), à la même place
+  const bs=[$("cbsolve"),$("wmgo")].filter(Boolean),cb=$("codebar"),svg=$("wall");if(!bs.length||!cb||!svg)return;
+  bs.forEach(x=>{x.style.marginLeft="";x.style.transform=""});cb.style.justifyContent="";
+  const b=bs.find(x=>x.offsetParent);if(innerWidth<=700||!b)return;
   const m=svg.getScreenCTM();if(!m)return;
   const p=WALL.panels[0],one=typeof wallView!=="undefined"&&wallView!=="all"||WALL.panels.length<2;
   const sr=svg.getBoundingClientRect(),x=one?(sr.left+sr.right)/2:m.a*(p.x0+p.w/2)+m.e;
