@@ -185,18 +185,19 @@ let pendingRate=null; // note choisie pour le bloc affiché, avant enregistremen
 const fmtD=ts=>new Date(ts).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 const sgn=v=>(v>0?"+":"")+v.toFixed(1);
 // Barre « Ton essai » (v41), juste sous le mur : enchaîné, ressenti, avis, enregistrer ; le reste dans « Plus de détails ».
-let pendingSent=null;
+let pendingRes=null; // "flash" | "sent" | "no" | null
 function renderRate(){
   const d=$("rate");if(!d)return;
   if(!cur){d.innerHTML='<p class="mut">Génère un bloc pour pouvoir le noter.</p>';return}
   const done=notes().find(t=>t.id===cur.id);
   if(pendingRate==null&&done)pendingRate=done.rating;
-  if(d.dataset.bid!==String(cur.id)){d.dataset.bid=String(cur.id);pendingSent=done&&done.sent!=null?done.sent:null}
-  const vt=voteOf(cur),nm=cur.moves||0,more=ls("trymore",false)===true,lockd=!!(done&&(done.flash===true||(done.flash===false&&done.tries)));
-  if(lockd)pendingSent=true;
+  if(d.dataset.bid!==String(cur.id)){d.dataset.bid=String(cur.id);pendingRes=!done||done.sent==null?null:done.sent===false?"no":done.flash===true?"flash":"sent"}
+  // v47 : « Résultat » = Flash / Enchaîné / Pas encore. Un résultat réussi (flash ou enchaîné) est verrouillé une fois enregistré ;
+  // après « Pas encore », le bloc ne peut plus être un flash.
+  const vt=voteOf(cur),nm=cur.moves||0,more=ls("trymore",false)===true,lockd=!!(done&&done.sent===true&&done.flash!=null),noFlash=!!(done&&done.flash===false);
   d.innerHTML=`<h3>Ton essai <span class="mut" style="font:400 .85rem var(--body)">· bloc estimé ${lab(cur.idx)}${done?` · déjà noté ${NOTE_N[done.rating]} (tu peux corriger)`:""}</span></h3>
   <div class="tryq">
-    ${lockd?`<div class="grp"><span>Au pied du mur</span><b class="lockd" title="Enregistré au pied du mur : non modifiable">${done.flash?"⚡ Flash":"Enchaîné en "+done.tries+" essais"} 🔒</b></div>`:`<div class="grp"><span>Enchaîné ?</span><div class="seg" role="group" aria-label="Enchaîné ?"><button data-s="1" aria-pressed="${pendingSent===true}">Oui</button><button data-s="0" aria-pressed="${pendingSent===false}">Pas encore</button></div></div>`}
+    ${lockd?`<div class="grp"><span>Résultat</span><b class="lockd" title="Résultat enregistré : non modifiable">${done.flash?"⚡ Flash":"Enchaîné"+(done.tries?" en "+done.tries+" essais":"")} 🔒</b></div>`:`<div class="grp"><span>Résultat</span><div class="seg" role="group" aria-label="Résultat"><button data-s="flash" aria-pressed="${pendingRes==="flash"}"${noFlash?' disabled title="Déjà essayé sans réussir : ce ne peut plus être un flash"':""}>Flash</button><button data-s="sent" aria-pressed="${pendingRes==="sent"}">Enchaîné</button><button data-s="no" aria-pressed="${pendingRes==="no"}">Pas encore</button></div></div>`}
     <div class="grp"><span>Ressenti</span><div class="seg" role="group" aria-label="Ressenti après essai">${NOTE_N.map((n,i)=>`<button data-r="${i}" aria-pressed="${pendingRate===i}">${n}</button>`).join("")}</div></div>
     <div class="grp"><span>Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div></div>
     <button class="pri" id="nsave"${pendingRate==null?" disabled":""} title="${pendingRate==null?"Choisis d'abord ton ressenti":""}">${done?"Mettre à jour":"Enregistrer"}</button>
@@ -208,13 +209,17 @@ function renderRate(){
   </div></details><span class="mut" id="vmsg" role="status"></span>`;
   $("trymore").addEventListener("toggle",e=>ss("trymore",e.target.open));
   d.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v;votePref(cur,voteOf(cur)===v?0:v);renderRate();renderTaste();const m=$("vmsg");if(m)m.textContent=voteOf(cur)?"Avis enregistré : le générateur en tient compte.":""});
-  d.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{const v=b.dataset.s==="1";pendingSent=pendingSent===v?null:v;d.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(pendingSent!==null&&(x.dataset.s==="1")===pendingSent)))});
+  d.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{const v=b.dataset.s;pendingRes=pendingRes===v?null:v;d.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.s===pendingRes)))});
   d.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{pendingRate=+b.dataset.r;d.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("nsave").disabled=false;$("nsave").title=""});
   $("nsave").onclick=()=>{
     if(pendingRate==null||!cur)return;
     if(!cur.id)cur.id=Date.now().toString(36);
-    const t={id:cur.id,ts:Date.now(),rating:pendingRate,comment:$("ncom").value.trim(),idx:cur.idx,mv:cur.mv,kind:cur.kind,hands:[...new Set(cur.hands.map(x=>x.n))],block:cur,crux:$("ncrux").value===""?null:+$("ncrux").value,key:cur.key?cur.key.k:null,sent:pendingSent,font:$("nfont").value||null};
-    if(done&&done.flash!=null){t.flash=done.flash;t.tries=done.tries||null;t.sent=true} // statut verrouillé (pied du mur)
+    const t={id:cur.id,ts:Date.now(),rating:pendingRate,comment:$("ncom").value.trim(),idx:cur.idx,mv:cur.mv,kind:cur.kind,hands:[...new Set(cur.hands.map(x=>x.n))],block:cur,crux:$("ncrux").value===""?null:+$("ncrux").value,key:cur.key?cur.key.k:null,sent:null,font:$("nfont").value||null};
+    if(lockd){t.flash=done.flash;t.tries=done.tries||null;t.sent=true} // résultat verrouillé
+    else if(pendingRes==="flash"&&!noFlash){t.sent=true;t.flash=true;t.tries=1}
+    else if(pendingRes==="sent"){t.sent=true;t.flash=false;t.tries=done&&done.tries||null}
+    else if(pendingRes==="no"){t.sent=false;t.flash=false;t.tries=done&&done.tries||null}
+    else if(done){t.sent=done.sent;t.flash=done.flash;t.tries=done.tries}
     const a=notes().filter(x=>x.id!==t.id);a.push(t);ss(KEY.notes,a.slice(-300));
     replay();renderNotes();renderRate();$("nsave").textContent="✓ Note enregistrée";
   };

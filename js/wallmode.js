@@ -15,6 +15,7 @@ function wUndoStop(){WM.undo=null;clearInterval(WM_T);WM_T=null}
 function wUndoArm(k){wUndoStop();WM.undo={k,until:Date.now()+10000};
   WM_T=setInterval(()=>{const d=$("wm");if(!d||d.hidden||!WM.undo||Date.now()>=WM.undo.until){wUndoStop()}if(d&&!d.hidden&&!WM.send)wmDraw()},1000)}
 // Essais comptés sur tout le bloc, et mouvement le plus essayé (= le passage le plus dur pour toi)
+const wNoFlash=()=>{const t=notes().find(x=>x.id===(B.created||("sv_"+BID)));return !!(t&&t.flash===false)}; // déjà essayé sans flash (v47)
 const wTotal=()=>Object.values(wTries()[BID]||{}).reduce((a,b)=>a+b,0);
 const wCrux=()=>{const t=wTries()[BID]||{};let k=null,m=0;Object.entries(t).forEach(([i,n])=>{if(n>m){m=n;k=+i}});return k};
 // « Flash ! » / « Enchaîné en N essais » (v44) : enregistre la note du bloc dans le générateur (enchaîné, ressenti, essais, passage le plus dur), puis retour.
@@ -25,7 +26,7 @@ function wmSend(rating){
   wUndoStop();
   if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=Math.max(tot,was.tries||0)||null;t.flash=was.flash===true?true:was.flash===false?false:tot<=1;t.comment=tot<=1?"Flash au pied du mur":"Enchaîné au pied du mur en "+tot+" essais";ss(KEY.notes,a);replay()}}
   WM.send=false;const mm=$("wmmsg");
-  const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">${tot<=1?"Flash ! Réussi du premier coup.":"Enchaîné en "+tot+" essais."}</p><p>${crux!=null&&tot>1?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
+  const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">${tot<=1&&was.flash!==false?"Flash ! Réussi du premier coup.":"Enchaîné"+(tot>1?" en "+tot+" essais":"")+"."}</p><p>${crux!=null&&tot>1?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
   const b=$("wmback");if(b)b.onclick=()=>wmClose();
 }
 function wmOpen(){wUndoStop();WM={fix:0,send:false,undo:null};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
@@ -46,8 +47,8 @@ function wmDraw(){
   const hn=h=>`n°${h.n} <span class="mut">(${esc(h.type.toLowerCase())})</span>`;
   // v45 : sur tablette (écran tactile), « Flash ! » est en haut tant que c'est un flash ; dès le 2e essai il revient en bas.
   // Sur ordinateur (souris), rien ne change.
-  const touch=!!(window.matchMedia&&matchMedia("(pointer: coarse)").matches),atTop=touch&&wTotal()<=1;
-  const sendH=`<section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">${wTotal()<=1?"Flash !":"Enchaîné en "+wTotal()+" essais"}</button></div><p class="mut" style="margin:6px 0 0">${wTotal()<=1?"Réussi du premier coup ? Touche « Flash ! ». Sinon, compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur.":"Le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>`;
+  const touch=!!(window.matchMedia&&matchMedia("(pointer: coarse)").matches),atTop=touch&&wTotal()<=1&&!wNoFlash();
+  const sendH=`<section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">${wTotal()<=1&&!wNoFlash()?"Flash !":"Enchaîné"+(wTotal()>1?" en "+wTotal()+" essais":"")}</button></div><p class="mut" style="margin:6px 0 0">${wTotal()<=1&&!wNoFlash()?"Réussi du premier coup ? Touche « Flash ! ». Sinon, compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur.":"Le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>`;
   d.innerHTML=`<div class="wmin">
     <div class="wmtop"><button type="button" data-wm="prev" aria-label="Mouvement précédent"${k?"":" disabled"}>‹</button>
       <div class="wmt"><b>Mouvement ${k+1} / ${n}</b>${k===AN.crux?' <span class="pill pill-key">clé</span>':""}<small>${esc(stepTitle(k))}</small></div>
