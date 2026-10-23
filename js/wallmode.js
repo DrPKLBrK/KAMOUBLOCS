@@ -13,13 +13,13 @@ let WM={fix:0,send:false};
 // Essais comptés sur tout le bloc, et mouvement le plus essayé (= le passage le plus dur pour toi)
 const wTotal=()=>Object.values(wTries()[BID]||{}).reduce((a,b)=>a+b,0);
 const wCrux=()=>{const t=wTries()[BID]||{};let k=null,m=0;Object.entries(t).forEach(([i,n])=>{if(n>m){m=n;k=+i}});return k};
-// « Bloc enchaîné ! » (v43) : enregistre la note du bloc dans le générateur (enchaîné, ressenti, essais, passage le plus dur), puis retour.
+// « Flash ! » / « Enchaîné en N essais » (v44) : enregistre la note du bloc dans le générateur (enchaîné, ressenti, essais, passage le plus dur), puis retour.
 function wmSend(rating){
-  const crux=wCrux(),tot=wTotal();
+  const tot=wTotal(),crux=tot>1?wCrux():null; // un flash (0 ou 1 essai) n'indique pas de passage plus dur que les autres
   const id=noteToGen({bid:BID,k:crux==null?0:crux},rating,null);
-  if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=tot||null;t.comment="Enchaîné au pied du mur"+(tot?" en "+tot+" essai"+(tot>1?"s":""):"");ss(KEY.notes,a);replay()}}
+  if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=tot||null;t.flash=tot<=1;t.comment=tot<=1?"Flash au pied du mur":"Enchaîné au pied du mur en "+tot+" essais";ss(KEY.notes,a);replay()}}
   WM.send=false;const mm=$("wmmsg");
-  const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">Bloc enregistré comme enchaîné${tot?" en "+tot+" essai"+(tot>1?"s":""):""}.</p><p>${crux!=null?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
+  const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">${tot<=1?"Flash ! Réussi du premier coup.":"Enchaîné en "+tot+" essais."}</p><p>${crux!=null&&tot>1?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
   const b=$("wmback");if(b)b.onclick=()=>wmClose();
 }
 function wmOpen(){WM={fix:0,send:false};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
@@ -47,7 +47,7 @@ function wmDraw(){
     ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
     ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
     <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><button type="button" data-wm="minus" aria-label="Retirer un essai"${tries?"":" disabled"}>−</button><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div></section>
-    <section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">Bloc enchaîné !</button></div><p class="mut" style="margin:6px 0 0">${wTotal()?`${wTotal()} essai${wTotal()>1?"s":""} comptés sur ce bloc`:"Compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>
+    <section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">${wTotal()<=1?"Flash !":"Enchaîné en "+wTotal()+" essais"}</button></div><p class="mut" style="margin:6px 0 0">${wTotal()<=1?"Réussi du premier coup ? Touche « Flash ! ». Sinon, compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur.":"Le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>
     <div class="wmrow"><button type="button" data-wm="done">Ce mouvement est passé</button></div>
     <p class="mut" id="wmmsg" role="status"></p></div>`;
   d.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>{const a=b.dataset.wm;
