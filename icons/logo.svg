@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>KAMOUBLOCS</title>
+  <rect id="fond" width="1024" height="1024" fill="#0E3B42"/>
+  <path id="prise" d="M222 560C204 430 284 300 424 262C544 228 694 236 780 318C850 384 834 486 796 566C752 660 666 770 524 790C376 810 240 720 222 560Z" fill="#FFCE54"/>
+  <path id="levre" d="M236 470C266 350 364 282 474 262C594 240 724 262 786 340C750 312 644 300 544 318C424 340 304 392 236 470Z" fill="#E9A93A"/>
+  <path id="K" d="M380 420v240M380 550L520 420M408 528L530 660" stroke="#0E3B42" stroke-width="54" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g id="trou"><circle cx="652" cy="560" r="44" fill="#E9A93A"/><circle cx="652" cy="560" r="22" fill="#0E3B42"/></g>
+</svg>
