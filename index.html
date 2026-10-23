@@ -241,13 +241,14 @@ body:not(.climbmode) .climbonly{display:none!important}
 @media (max-width:700px){#bar{grid-template-columns:1fr 1fr}#bar>.pri{grid-column:1/-1}}
 .moreset{grid-column:1/-1}.moreset>summary{font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.moreset>summary small{font-weight:400;color:var(--mut)}.moreset .bar{margin-top:10px}
 @media print{.tryrow{display:none!important}}
+.leg>span:last-child{margin-left:auto;text-align:right} /* v42 : la note « Prises à l'échelle… » calée à droite, séparée des pastilles */
 .legrow{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;justify-content:space-between;margin-top:8px}.legrow .leg{flex:1 1 320px;min-width:0;margin-top:0}.legrow #wmgo{flex:none;margin-left:auto}
 @media print{#wmgo{display:none!important}}
 .devwarn{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:10px;padding:10px 12px}
 </style>
 </head><body>
 <div class="page" id="page">
-<header data-sec="head" data-span="full"><h1>KAMOUBLOCS <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v41</small></h1><p class="sub">Des blocs pour tout ton mur, expliqués et vérifiés.</p></header>
+<header data-sec="head" data-span="full"><h1>KAMOUBLOCS <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v42</small></h1><p class="sub">Des blocs pour tout ton mur, expliqués et vérifiés.</p></header>
 
 <section class="panel" data-sec="bar" data-span="full" aria-label="Réglages du bloc"><div class="bar" id="bar"></div><div id="focusbox"></div></section>
 <section class="panel" data-sec="session" data-span="full" id="session" aria-label="Séances et progression"></section>
