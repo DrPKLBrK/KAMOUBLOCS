@@ -32,4 +32,6 @@ boot("boutons",()=>{
 boot("mur",()=>drawWall(null));boot("premier bloc",()=>{if(typeof hasShareHash==="function"&&hasShareHash())openShared().then(ok=>{if(!ok)generate()});else generate()});
 // lien de partage collé dans un onglet déjà ouvert : seule l'ancre change, la page ne se recharge pas
 window.addEventListener("hashchange",()=>{if(typeof hasShareHash==="function"&&hasShareHash()){const m=document.getElementById("sharemsg");if(m)m.remove();openShared()}});
+// note enregistrée depuis le résolveur ouvert dans un autre onglet (« Bloc enchaîné ! » au pied du mur) : la barre « Ton essai » se met à jour
+window.addEventListener("storage",e=>{if(e.key===KEY.notes){try{replay();renderNotes();renderRate()}catch(_){}}});
 bootReport();setTimeout(bootReport,2500);

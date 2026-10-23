@@ -9,8 +9,20 @@ const wTries=()=>ls(WT_KEY,{})||{};
 const wGet=k=>((wTries()[BID]||{})[k])||0;
 function wSet(k,n){const a=wTries();a[BID]=a[BID]||{};a[BID][k]=Math.max(0,n);ss(WT_KEY,a);
   const l=hist(),e=l.find(q=>q.bid===BID&&q.k===k&&!q.test);if(e){e.tries=a[BID][k];ss(SVH_KEY,l)}}
-let WM={fix:0};
-function wmOpen(){WM={fix:0};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
+let WM={fix:0,send:false};
+// Essais comptés sur tout le bloc, et mouvement le plus essayé (= le passage le plus dur pour toi)
+const wTotal=()=>Object.values(wTries()[BID]||{}).reduce((a,b)=>a+b,0);
+const wCrux=()=>{const t=wTries()[BID]||{};let k=null,m=0;Object.entries(t).forEach(([i,n])=>{if(n>m){m=n;k=+i}});return k};
+// « Bloc enchaîné ! » (v43) : enregistre la note du bloc dans le générateur (enchaîné, ressenti, essais, passage le plus dur), puis retour.
+function wmSend(rating){
+  const crux=wCrux(),tot=wTotal();
+  const id=noteToGen({bid:BID,k:crux==null?0:crux},rating,null);
+  if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=tot||null;t.comment="Enchaîné au pied du mur"+(tot?" en "+tot+" essai"+(tot>1?"s":""):"");ss(KEY.notes,a);replay()}}
+  WM.send=false;const mm=$("wmmsg");
+  const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">Bloc enregistré comme enchaîné${tot?" en "+tot+" essai"+(tot>1?"s":""):""}.</p><p>${crux!=null?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
+  const b=$("wmback");if(b)b.onclick=()=>wmClose();
+}
+function wmOpen(){WM={fix:0,send:false};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
   d.hidden=false;document.documentElement.classList.add("wmon");wmDraw()}
 // retour au générateur quand le mode pied du mur a été ouvert depuis le mode grimpeur
 function wmBack(){
@@ -35,17 +47,24 @@ function wmDraw(){
     ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
     ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
     <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><button type="button" data-wm="minus" aria-label="Retirer un essai"${tries?"":" disabled"}>−</button><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div></section>
-    <div class="wmrow"><button type="button" class="pri wmok" data-wm="done">Débloqué !</button></div>
+    <section class="wmsend"><h3>Bloc entier</h3>${WM.send?`<p>Comment c'était ?</p><div class="wmrow wmrates">${NOTE_N.map((t,i)=>`<button type="button" data-ws="${i}">${t}</button>`).join("")}</div><button type="button" data-wm="sendx">Annuler</button>`:`<div class="wmrow"><button type="button" class="pri wmok" data-wm="send">Bloc enchaîné !</button></div><p class="mut" style="margin:6px 0 0">${wTotal()?`${wTotal()} essai${wTotal()>1?"s":""} comptés sur ce bloc`:"Compte tes essais avec « +1 essai » : le mouvement le plus essayé sera retenu comme ton passage le plus dur."}</p>`}</section>
+    <div class="wmrow"><button type="button" data-wm="done">Ce mouvement est passé</button></div>
     <p class="mut" id="wmmsg" role="status"></p></div>`;
   d.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>{const a=b.dataset.wm;
     if(a==="close")return wmClose();
     if(a==="prev"&&SEL.k>0){SEL.k--;WM.fix=0}
     if(a==="next"&&SEL.k<n-1){SEL.k++;WM.fix=0}
     if(a==="fix")WM.fix++;
+    if(a==="send"){WM.send=true}
+    if(a==="sendx"){WM.send=false}
     if(a==="plus"){if(!hist().some(q=>q.bid===BID&&q.k===k&&!q.test))keepCur({tries:0});wSet(k,tries+1)}
     if(a==="minus")wSet(k,tries-1);
-    if(a==="done"){let e=hist().find(q=>q.bid===BID&&q.k===k&&!q.test);if(!e)e=keepCur({tries});OPEN=e.ts;wmClose();const h=$("hist");if(h)h.scrollIntoView({block:"start"});return}
+    if(a==="done"){let e=hist().find(q=>q.bid===BID&&q.k===k&&!q.test);if(!e)e=keepCur({tries});OPEN=e.ts;
+      // ouvert depuis le mode grimpeur : on affiche la page du résolveur pour remplir la fiche, au lieu de repartir au générateur
+      if(typeof WMONLY!=="undefined"&&WMONLY){WMONLY=false;document.documentElement.classList.remove("wmonly")}
+      wmClose();const h=$("hist");if(h)h.scrollIntoView({block:"start"});return}
     wmDraw()});
+  d.querySelectorAll("[data-ws]").forEach(b=>b.onclick=()=>wmSend(+b.dataset.ws));
   d.querySelectorAll("[data-wt]").forEach(b=>b.onclick=()=>{
     histAdd({ts:Date.now(),bid:BID,k,test:true,q:dis.q,title:`Test · ${dis.q} · mouvement ${k+1}`,cmp:[{q:dis.q,a:dis.a,b:dis.b}],hn:m.h.n,truth:{probs:b.dataset.wt==="1"?[dis.q]:[],fix:null},done:true});
     calReplay();analyze();wmDraw();const mm=$("wmmsg");if(mm)mm.textContent="Test enregistré : il apprend au résolveur sur quel modèle s'appuyer."});
