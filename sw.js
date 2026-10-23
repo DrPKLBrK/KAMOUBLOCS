@@ -1,0 +1,15 @@
+// Service worker de KAMOUBLOCS (appli installable). Généré par tests/mkpwa.py : ne pas modifier sw.js à la main.
+// - À l'installation : met en cache tous les fichiers de l'outil (il fonctionne ensuite sans réseau).
+// - Ensuite : sert les fichiers depuis le cache ; les polices Google sont gardées au premier passage.
+// - Nouvelle version publiée : elle s'installe en arrière-plan et attend que tu cliques « Mettre à jour » (js/pwa.js).
+const VERSION="8373b94b817d",CACHE="kamoublocs-"+VERSION,FONTS="kamoublocs-polices",FILES=["./", "index.html", "solveur.html", "manifest.webmanifest", "js/anatomy.js", "js/bench.js", "js/blockcode.js", "js/body.js", "js/calib.js", "js/checks.js", "js/config.js", "js/custom.js", "js/device.js", "js/editor.js", "js/focus.js", "js/generator.js", "js/grade.js", "js/holds.js", "js/judge.js", "js/learn.js", "js/link.js", "js/main.js", "js/measure.js", "js/model2.js", "js/opening.js", "js/panels.js", "js/physics.js", "js/prises.js", "js/pwa.js", "js/render.js", "js/session.js", "js/skeleton.js", "js/solver-ui.js", "js/solver.js", "js/styles.js", "js/techniques.js", "js/trust.js", "js/tune.js", "js/ui.js", "js/ustyles.js", "js/util.js", "js/wall.js", "js/wallmode.js", "js/walls.js", "prises/01.png", "prises/02.png", "prises/03.png", "prises/04.png", "prises/05.png", "prises/06.png", "prises/07.png", "prises/08.png", "prises/09.png", "prises/10.png", "prises/11.png", "prises/12.png", "prises/13.png", "prises/14.png", "prises/15.png", "prises/16.png", "prises/17.png", "prises/18.png", "prises/19.png", "prises/20.png", "prises/21.png", "prises/22.png", "prises/23.png", "prises/24.png", "prises/25.png", "prises/26.png", "prises/27.png", "prises/28.png", "prises/29.png", "prises/30.png", "prises/31.png", "prises/32.png", "prises/33.png", "prises/34.png", "prises/35.png", "prises/36.png", "prises/37.png", "prises/38.png", "prises/39.png", "prises/40.png", "prises/41.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"];
+self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES.map(f=>new Request(f,{cache:"reload"})))))});
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&k!==FONTS).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener("message",e=>{if(e.data==="skip")self.skipWaiting()});
+self.addEventListener("fetch",e=>{
+  const u=new URL(e.request.url);if(e.request.method!=="GET")return;
+  if(u.hostname==="fonts.googleapis.com"||u.hostname==="fonts.gstatic.com"){
+    e.respondWith(caches.open(FONTS).then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(n=>{if(n.ok||n.type==="opaque")c.put(e.request,n.clone());return n}).catch(()=>new Response("",{status:504})))));return}
+  if(u.origin!==location.origin)return;
+  e.respondWith(caches.open(CACHE).then(c=>c.match(e.request,{ignoreSearch:true}).then(r=>r||fetch(e.request).catch(()=>e.request.mode==="navigate"?c.match("./index.html"):Response.error()))));
+});

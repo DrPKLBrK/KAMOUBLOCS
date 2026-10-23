@@ -1,0 +1,47 @@
+// WALLMODE (v29, amélioration 4.2) : mode séance au pied du mur, dans le résolveur.
+// Le rapport complet est long à lire entre deux essais. Cet écran ne garde que l'utile, en gros : le mouvement, la cause principale,
+// la méthode à essayer (une à la fois), le test qui tranche un désaccord entre les modèles, et un compteur d'essais par mouvement.
+// Le même diagnostic que le rapport (diagnose, mergeCauses, fixesOf) : rien n'est calculé autrement.
+// Les essais sont gardés par bloc et par mouvement (clé solve_tries) et recopiés dans le suivi : le premier essai compté ajoute
+// le mouvement au suivi, « Débloqué » ouvre le formulaire du suivi (ce qui coinçait vraiment, ce qui a marché).
+const WT_KEY="solve_tries";
+const wTries=()=>ls(WT_KEY,{})||{};
+const wGet=k=>((wTries()[BID]||{})[k])||0;
+function wSet(k,n){const a=wTries();a[BID]=a[BID]||{};a[BID][k]=Math.max(0,n);ss(WT_KEY,a);
+  const l=hist(),e=l.find(q=>q.bid===BID&&q.k===k&&!q.test);if(e){e.tries=a[BID][k];ss(SVH_KEY,l)}}
+let WM={fix:0};
+function wmOpen(){WM={fix:0};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
+  d.hidden=false;document.documentElement.classList.add("wmon");wmDraw()}
+function wmClose(){const d=$("wm");if(d)d.hidden=true;document.documentElement.classList.remove("wmon");update();renderHist()}
+function wmDraw(){
+  const d=$("wm"),k=SEL.k,x=AN.M[k],m=x.m,n=AN.M.length;
+  const DGk=diagnose(AN,k,SEL.sym),CMP=AN.CMP[k],MC=mergeCauses(DGk,CMP,x,SEL.sym),C=MC.filter(c=>c.score>=.2),F=fixesOf({C:MC},workedCount());
+  CUR={k,C:C.slice(0,3),F,CMP};
+  const c0=C[0],f=F.length?F[WM.fix%F.length]:null,tries=wGet(k);
+  const dis=CMP.find(c=>!c.agree&&!testDone(c.q,k)),T=dis?testFor(dis.q,x):null;
+  const hn=h=>`n°${h.n} <span class="mut">(${esc(h.type.toLowerCase())})</span>`;
+  d.innerHTML=`<div class="wmin">
+    <div class="wmtop"><button type="button" data-wm="prev" aria-label="Mouvement précédent"${k?"":" disabled"}>‹</button>
+      <div class="wmt"><b>Mouvement ${k+1} / ${n}</b>${k===AN.crux?' <span class="pill pill-key">clé</span>':""}<small>${esc(stepTitle(k))}</small></div>
+      <button type="button" data-wm="next" aria-label="Mouvement suivant"${k<n-1?"":" disabled"}>›</button><button type="button" data-wm="close" aria-label="Fermer le mode pied du mur">✕</button></div>
+    <p class="wmh">Vers ${hn(m.h)}${m.pair?" et "+hn(m.pair.h):""} · main fixe ${hn(x.fixed.h)}</p>
+    <section><h3>Ce qui coince</h3>${c0?`<p class="wmbig">${esc(CAUSEN[c0.id])}</p><p>${esc(c0.why)}</p>${C[1]?`<p class="mut">Ensuite : ${C.slice(1,3).map(c=>esc(CAUSEN[c.id].toLowerCase())).join(", ")}.</p>`:""}`:`<p>Aucun point mécanique saillant à ta taille : vérifie le placement des pieds et du bassin.</p>`}</section>
+    ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
+    ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
+    <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><button type="button" data-wm="minus" aria-label="Retirer un essai"${tries?"":" disabled"}>−</button><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div></section>
+    <div class="wmrow"><button type="button" class="pri wmok" data-wm="done">Débloqué !</button></div>
+    <p class="mut" id="wmmsg" role="status"></p></div>`;
+  d.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>{const a=b.dataset.wm;
+    if(a==="close")return wmClose();
+    if(a==="prev"&&SEL.k>0){SEL.k--;WM.fix=0}
+    if(a==="next"&&SEL.k<n-1){SEL.k++;WM.fix=0}
+    if(a==="fix")WM.fix++;
+    if(a==="plus"){if(!hist().some(q=>q.bid===BID&&q.k===k&&!q.test))keepCur({tries:0});wSet(k,tries+1)}
+    if(a==="minus")wSet(k,tries-1);
+    if(a==="done"){let e=hist().find(q=>q.bid===BID&&q.k===k&&!q.test);if(!e)e=keepCur({tries});OPEN=e.ts;wmClose();const h=$("hist");if(h)h.scrollIntoView({block:"start"});return}
+    wmDraw()});
+  d.querySelectorAll("[data-wt]").forEach(b=>b.onclick=()=>{
+    histAdd({ts:Date.now(),bid:BID,k,test:true,q:dis.q,title:`Test · ${dis.q} · mouvement ${k+1}`,cmp:[{q:dis.q,a:dis.a,b:dis.b}],hn:m.h.n,truth:{probs:b.dataset.wt==="1"?[dis.q]:[],fix:null},done:true});
+    calReplay();analyze();wmDraw();const mm=$("wmmsg");if(mm)mm.textContent="Test enregistré : il apprend au résolveur sur quel modèle s'appuyer."});
+}
+document.addEventListener("keydown",e=>{const d=$("wm");if(d&&!d.hidden&&e.key==="Escape")wmClose()});
