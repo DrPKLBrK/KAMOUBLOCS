@@ -13,6 +13,7 @@ function bootReport(){
 boot("boutons",()=>{
   $("save").onclick=()=>{if(!cur)return;ss(KEY.favs,[...favs(),cur]);if(!voteOf(cur))votePref(cur,1);renderFavs();renderRate();renderTaste()};
   $("opensolve").onclick=()=>openSolver(null);
+  $("cbprint").onclick=()=>window.print();
   // en-tête du bloc : ouvert ou replié, mémorisé pour la prochaine fois
   const md=$("metd");if(md)md.addEventListener("toggle",()=>{if(cur)ss("metopen",md.open)});
   // mode pied du mur : réservé au mode grimpeur, il s'ouvre directement (sans le rapport du résolveur)

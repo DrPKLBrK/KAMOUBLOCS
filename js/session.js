@@ -95,3 +95,14 @@ function renderSession(){
 }
 show=(function(base){return function(r){base(r);if(r&&r.tag&&r.tag.kind==="session"){ssGot(r);renderSession();const m=$("met");if(m)m.insertAdjacentHTML("afterbegin",`<span class="chip tagc"><i>Séance</i>${esc(r.tag.lab)}</span>`)}}})(show);
 renderNotes=(function(base){return function(){base();renderSession()}})(renderNotes);
+// Panneau repliable (v35) : le titre devient un menu déroulant, avec une ligne de résumé quand il est fermé.
+// Fermé par défaut hors séance, ouvert pendant une séance ; ton choix est retenu dans chacun des deux cas.
+renderSession=(function(base){return function(){
+  base();const d=$("session");if(!d)return;const h=d.querySelector("h2");if(!h)return;
+  const s=ssActive(),key=s?"ssopen_on":"ssopen",open=ls(key,!!s)===true;
+  const info=s?`${s.steps.filter(x=>x.id).length} / ${s.steps.length} blocs`:`niveau de travail ${fmtW(ssPlan().W)}`;
+  const det=document.createElement("details");det.className="sscol";det.open=open;
+  const sum=document.createElement("summary");sum.appendChild(h);sum.insertAdjacentHTML("beforeend",`<span class="mut">${esc(info)}</span>`);det.appendChild(sum);
+  while(d.firstChild)det.appendChild(d.firstChild);d.appendChild(det);
+  det.addEventListener("toggle",()=>ss(key,det.open));
+}})(renderSession);
