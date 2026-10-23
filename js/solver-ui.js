@@ -225,7 +225,7 @@ function init(){
   // mode pied du mur demandé depuis le mode grimpeur du générateur : il s'ouvre seul, et le fermer ramène au générateur
   try{WMONLY=localStorage.getItem("solve_wm")==="1";localStorage.removeItem("solve_wm")}catch(e){}
   // wallmode.js est chargé après ce fichier : on attend qu'il soit là avant d'ouvrir
-  if(WMONLY){document.documentElement.classList.add("wmonly");let n=0;const go=()=>{if(typeof wmOpen==="function")wmOpen();else if(n++<100)setTimeout(go,30)};go()}
+  if(WMONLY){document.documentElement.classList.add("wmonly");SEL.k=0; /* au pied du mur, on commence par le 1er mouvement, pas par le passage clé */let n=0;const go=()=>{if(typeof wmOpen==="function")wmOpen();else if(n++<100)setTimeout(go,30)};go()}
   if(window.SV_EMBED)$("togen").hidden=true;
   else{const t=$("togen"),g=ls("gen_page",null);if(typeof g==="string"&&/\.html?$/i.test(g))t.href=encodeURIComponent(g);
     // ouvert depuis le générateur (nouvel onglet) : on y revient au lieu d'ouvrir une deuxième copie
