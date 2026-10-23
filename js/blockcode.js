@@ -49,6 +49,7 @@ function renderCodeBar(r){
   const msg=t=>{$("cbmsg").textContent=t;setTimeout(()=>{if($("cbmsg"))$("cbmsg").textContent=""},2500)};
   $("cbfile").onclick=()=>downloadText("bloc-"+(r.seed||r.id||"x")+".json",JSON.stringify(blockObject(r),null,1));
   $("cbsolve").onclick=()=>openSolver(blockCode(r));
+  if(typeof alignSolve==="function")requestAnimationFrame(alignSolve);
   $("cbshare").onclick=async()=>{
     let url;try{url=await shareLink(r)}catch(e){msg("Lien impossible à créer : utilise « Copier le code du bloc »");return}
     if(navigator.share){try{await navigator.share({title:"Bloc KAMOUBLOCS",text:"Un bloc à essayer ("+lab(r.idx)+", "+r.moves+" mouvements) :",url});return}catch(e){if(e&&e.name==="AbortError")return}}

@@ -46,3 +46,19 @@ function wallSVG(r){
   return s;
 }
 const drawWall=r=>{const s=$("wall");s.setAttribute("viewBox",vbFor(wallView));s.innerHTML=wallSVG(r)};
+// « Résoudre ce bloc » centré au-dessus du pan de gauche du dessin (v37) ; mur entier ou vue d'un seul pan : centré sur le dessin.
+// Sur téléphone (dessin plus large que l'écran, défilement horizontal) : simplement centré dans sa ligne.
+function alignSolve(){
+  const b=$("cbsolve"),cb=$("codebar"),svg=$("wall");if(!b||!cb||!svg)return;
+  b.style.marginLeft="";cb.style.justifyContent="";
+  if(innerWidth<=700||!b.offsetParent)return;
+  const m=svg.getScreenCTM();if(!m)return;
+  const p=WALL.panels[0],one=typeof wallView!=="undefined"&&wallView!=="all"||WALL.panels.length<2;
+  const sr=svg.getBoundingClientRect(),x=one?(sr.left+sr.right)/2:m.a*(p.x0+p.w/2)+m.e;
+  const r=cb.getBoundingClientRect(),w=b.getBoundingClientRect().width;
+  cb.style.justifyContent="flex-start";b.style.marginLeft=Math.max(0,Math.min(r.width-w,x-r.left-w/2))+"px";
+}
+(function(){const go=()=>requestAnimationFrame(alignSolve),s=document.getElementById("wall");
+  if(s&&window.MutationObserver)new MutationObserver(go).observe(s,{attributes:true,attributeFilter:["viewBox"],childList:true});
+  addEventListener("resize",go);if(window.ResizeObserver&&s)new ResizeObserver(go).observe(s);
+  document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#modeseg,#views,#edopen,#editor"))setTimeout(go,50)})})();
