@@ -188,6 +188,7 @@ const sgn=v=>(v>0?"+":"")+v.toFixed(1);
 let pendingRes=null; // "flash" | "sent" | "no" | null
 function renderRate(){
   const d=$("rate");if(!d)return;
+  const vb=$("votebox");if(vb)vb.innerHTML="";
   if(!cur){d.innerHTML='<p class="mut">Génère un bloc pour pouvoir le noter.</p>';return}
   const done=notes().find(t=>t.id===cur.id);
   if(pendingRate==null&&done)pendingRate=done.rating;
@@ -199,7 +200,6 @@ function renderRate(){
   <div class="tryq">
     ${lockd?`<div class="grp"><span>Résultat</span><b class="lockd" title="Résultat enregistré : non modifiable">${done.flash?"⚡ Flash":"Enchaîné"+(done.tries?" en "+done.tries+" essais":"")} 🔒</b></div>`:`<div class="grp"><span>Résultat</span><div class="seg" role="group" aria-label="Résultat"><button data-s="flash" aria-pressed="${pendingRes==="flash"}"${noFlash?' disabled title="Déjà essayé sans réussir : ce ne peut plus être un flash"':""}>Flash</button><button data-s="sent" aria-pressed="${pendingRes==="sent"}">Enchaîné</button><button data-s="no" aria-pressed="${pendingRes==="no"}">Pas encore</button></div></div>`}
     <div class="grp"><span>Ressenti</span><div class="seg" role="group" aria-label="Ressenti après essai">${NOTE_N.map((n,i)=>`<button data-r="${i}" aria-pressed="${pendingRate===i}">${n}</button>`).join("")}</div></div>
-    <div class="grp"><span>Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div></div>
     <button class="pri" id="nsave"${pendingRate==null?" disabled":""} title="${pendingRate==null?"Choisis d'abord ton ressenti":""}">${done?"Mettre à jour":"Enregistrer"}</button>
   </div>
   <details class="trymore" id="trymore"${more?" open":""}><summary>Plus de détails : passage le plus dur, cotation, commentaire</summary><div class="rate">
@@ -208,6 +208,9 @@ function renderRate(){
   <label class="f" for="ncom" style="flex:1 1 220px"><span>Commentaire (facultatif)</span><input id="ncom" type="text" maxlength="120" placeholder="Ex. le 3e mouvement est bien plus dur" value="${esc(done?done.comment||"":"")}"></label>
   </div></details><span class="mut" id="vmsg" role="status"></span>`;
   $("trymore").addEventListener("toggle",e=>ss("trymore",e.target.open));
+  // avis sur le bloc : en bas à droite, sur la ligne « Affichage » (v48)
+  if(vb){vb.innerHTML=`<span>Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div>`;
+    vb.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v;votePref(cur,voteOf(cur)===v?0:v);renderRate();renderTaste();const m=$("vmsg");if(m)m.textContent=voteOf(cur)?"Avis enregistré : le générateur en tient compte.":""})}
   d.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v;votePref(cur,voteOf(cur)===v?0:v);renderRate();renderTaste();const m=$("vmsg");if(m)m.textContent=voteOf(cur)?"Avis enregistré : le générateur en tient compte.":""});
   d.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{const v=b.dataset.s;pendingRes=pendingRes===v?null:v;d.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.s===pendingRes)))});
   d.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{pendingRate=+b.dataset.r;d.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("nsave").disabled=false;$("nsave").title=""});
