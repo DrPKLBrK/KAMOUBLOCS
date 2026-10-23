@@ -42,7 +42,7 @@ function drawSolveWall(){
 // ---------- En-tête du bloc ----------
 function renderHead(){
   const n=S.mv.length,crux=AN.crux,H=fr(SP.H/100,2);
-  $("bmeta").innerHTML=`${SRC==="sample"?'<span class="pill pill-ex">Exemple</span> ':""}${B.seed?`Graine <b>${esc(B.seed)}</b> · `:""}${n} mouvements · ${esc(MVN[B.style]||B.style)} · ${esc(KINDN[B.kind]||"parcours")} · ${esc(WALL.name)}`;
+  $("bmeta").innerHTML=`${SRC==="sample"?'<span class="pill pill-ex">Exemple</span> ':""}${n} mouvements · ${esc(MVN[B.style]||B.style)} · ${esc(KINDN[B.kind]||"parcours")} · ${esc(WALL.name)}`;
   const lv=(t,v,sub)=>`<div class="lv"><span>${t}</span><b>${svLab(v)}</b><small>${fr(v,1)} / 10${sub?" · "+sub:""}</small></div>`;
   const gT=gradeTxt(AN.idx),gB=gradeOf(B.level),gq=GRF.personal?"":" (provisoire)";
   let h=lv("Niveau du générateur",B.level,refLabel()+` · ≈ ${gB}${gq}`)+lv(`Pour toi (${H} m)`,AN.idx,(LEARN.n?`ajusté par tes ${LEARN.n} notes`:"envergure "+fr(SP.ape/100,2))+` · ≈ ${gT.g}${gq}`)+

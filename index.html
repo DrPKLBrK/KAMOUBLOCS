@@ -218,11 +218,13 @@ abbr.gl{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 .metd{margin-bottom:12px}.metd>summary{font-weight:600}.metd>summary .err{font-weight:600}.metd .met{margin:8px 0 0}
 body:not(.climbmode) .climbonly{display:none!important}
 .ssh{margin-top:12px}.ssh>summary{font:700 .95rem var(--display)}.ssh .tw{margin-top:6px}
+.legrow{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;justify-content:space-between;margin-top:8px}.legrow .leg{flex:1 1 320px;min-width:0;margin-top:0}.legrow #wmgo{flex:none;margin-left:auto}
+@media print{#wmgo{display:none!important}}
 .devwarn{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:10px;padding:10px 12px}
 </style>
 </head><body>
 <div class="page" id="page">
-<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v31</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
+<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v32</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
 
 <section class="panel" data-sec="bar" data-span="full" aria-label="Réglages du bloc"><div class="bar" id="bar"></div><div id="focusbox"></div></section>
 <section class="panel" data-sec="session" data-span="full" id="session" aria-label="Séances et progression"></section>
@@ -234,10 +236,10 @@ body:not(.climbmode) .climbonly{display:none!important}
 
 <section class="panel" data-sec="result" data-span="full" aria-label="Bloc généré">
 <details class="metd" id="metd"><summary id="metsum">Détails du bloc</summary><div class="met" id="met"></div></details>
-<div class="wallbar"><div class="seg" id="views" role="group" aria-label="Vue du mur"></div><div class="seg" id="modeseg" role="group" aria-label="Mode d'utilisation"><button data-mode="open" aria-pressed="true" title="Ouverture : tu montes les blocs sur le mur">Mode ouverture</button><button data-mode="climb" aria-pressed="false" title="Grimpeur : cache le déroulé et le plan de montage">Mode grimpeur</button></div><button id="wmgo" class="pri climbonly" title="Écran simplifié pour grimper : un mouvement à la fois, la cause et la méthode à essayer, un compteur d'essais">Mode pied du mur</button><button id="save">Sauvegarder ce bloc</button></div>
+<div class="wallbar"><div class="seg" id="views" role="group" aria-label="Vue du mur"></div><div class="seg" id="modeseg" role="group" aria-label="Mode d'utilisation"><button data-mode="open" aria-pressed="true" title="Ouverture : tu montes les blocs sur le mur">Mode ouverture</button><button data-mode="climb" aria-pressed="false" title="Grimpeur : cache le déroulé et le plan de montage">Mode grimpeur</button></div><button id="save">Sauvegarder ce bloc</button></div>
 <div class="openbar" id="codebar"></div>
 <div class="svgw"><svg id="wall" viewBox="-5 -5 513 285" role="img" aria-label="Schéma du mur et du bloc"></svg></div>
-<div class="leg"><span><i style="background:var(--start)"></i>Départ (D)</span><span><i style="background:var(--hand)"></i>Main (ordre 1, 2, 3…)</span><span><i style="background:var(--finish)"></i>Arrivée (A)</span><span><i style="background:var(--foot)"></i>Pied</span><span>Prises à l'échelle, tournées comme à monter (0° = comme sur la photo, sens anti-horaire)</span></div>
+<div class="legrow"><div class="leg"><span><i style="background:var(--start)"></i>Départ (D)</span><span><i style="background:var(--hand)"></i>Main (ordre 1, 2, 3…)</span><span><i style="background:var(--finish)"></i>Arrivée (A)</span><span><i style="background:var(--foot)"></i>Pied</span><span>Prises à l'échelle, tournées comme à monter (0° = comme sur la photo, sens anti-horaire)</span></div><button id="wmgo" class="pri climbonly" title="Écran simplifié pour grimper : un mouvement à la fois, la cause et la méthode à essayer, un compteur d'essais">Mode pied du mur</button></div>
 <div class="openbar" id="openbar"><label class="sw"><input type="checkbox" id="multi"><span>Ouvrir plusieurs blocs sur le mur : ne plus proposer les prises cochées « posées »</span></label><span class="mut" id="posedinfo"></span><button id="posedreset">Tout démonter</button></div>
 <div class="hidebar"><span>Affichage :</span><label class="sw"><input type="checkbox" data-showsec="seq" checked><span>Montrer le déroulé</span></label><label class="sw"><input type="checkbox" data-showsec="mount" checked><span>Montrer le plan de montage</span></label></div>
 </section>
