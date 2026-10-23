@@ -116,7 +116,7 @@ function tabPrises(flt=""){
 function tabAff(){
   return `<div class="row"><label class="sw"><input type="checkbox" id="zoom"${CFG.zoom?" checked":""}><span>Agrandir les prises sur le mur (lisibilité)</span></label>
   <label class="f" for="theme"><span>Thème</span><select id="theme">${optHtml([["auto","Automatique"],["light","Clair"],["dark","Sombre"]],CFG.theme)}</select></label></div>
-  <div class="row"><label class="sw"><input type="checkbox" id="expert"${CFG.expert?" checked":""}><span>Mode expert : afficher le benchmark du générateur et le tableau de bord de calibration</span></label></div>
+  <div class="row"><label class="sw"><input type="checkbox" id="expert"${CFG.expert?" checked":""}><span>Mode expert : afficher le benchmark du générateur, le tableau de bord de calibration et l'export des blocs en .json</span></label></div>
   <div class="row"><button id="wipe">Effacer l'historique de variété</button><span class="mut">Remet à zéro la mémoire qui évite de refaire les mêmes blocs.</span></div>${backupHtml()}`;
 }
 const saveHolds=()=>{const g={},n={},o={};holds.forEach(h=>{g[h.n]=h.grip;if(h.type!==h.type0)n[h.n]=h.type;o[h.n]=h.on});ss(KEY.grips,g);ss(KEY.names,n);ss(KEY.on,o)};

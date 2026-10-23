@@ -44,7 +44,7 @@ function downloadText(name,txt,type){const a=document.createElement("a");a.href=
 function renderCodeBar(r){
   const d=$("codebar");if(!d)return;
   if(!r||!r.seq){d.innerHTML="";return}
-  d.innerHTML=`<button id="cbfile">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><span class="mut" id="cbmsg" role="status"></span><span class="cbright"><button id="cbshare" class="pri">Partager le bloc</button><button id="cbprint">Imprimer</button></span>`;
+  d.innerHTML=`<button id="cbfile" class="expertonly" title="Fichier complet du bloc (archive, débogage)">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><span class="mut" id="cbmsg" role="status"></span><span class="cbright"><button id="cbshare" class="pri">Partager le bloc</button><button id="cbprint">Imprimer</button></span>`;
   const msg=t=>{$("cbmsg").textContent=t;setTimeout(()=>{if($("cbmsg"))$("cbmsg").textContent=""},2500)};
   $("cbfile").onclick=()=>downloadText("bloc-"+(r.seed||r.id||"x")+".json",JSON.stringify(blockObject(r),null,1));
   $("cbsolve").onclick=()=>openSolver(blockCode(r));

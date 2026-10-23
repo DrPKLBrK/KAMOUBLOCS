@@ -198,7 +198,7 @@ html[data-sum=card] details>summary{border:var(--cbw,1px) solid var(--ctlline,va
 .cbl{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}.cbdot{stroke:var(--card);stroke-width:2}.cbx{stroke:var(--mut);stroke-width:1}
 .cbtip{position:absolute;top:6px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:.85rem;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.12);max-width:170px}
 .cbleg{display:flex;gap:14px;font-size:.88rem;color:var(--mut)}.cbleg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
-html:not(.expert) [data-sec=bench],html:not(.expert) [data-sec=calib]{display:none!important}
+html:not(.expert) [data-sec=bench],html:not(.expert) [data-sec=calib],html:not(.expert) .expertonly{display:none!important}
 abbr.gl{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 .glpop{display:block;font-size:.85rem;font-weight:400;color:var(--fg);background:var(--soft);border-radius:6px;padding:4px 8px;margin:4px 0}
 /* impression (v30) : le mur, le déroulé et le plan de montage, en clair, sans boutons */
@@ -226,7 +226,7 @@ body:not(.climbmode) .climbonly{display:none!important}
 </style>
 </head><body>
 <div class="page" id="page">
-<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v33</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
+<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v34</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
 
 <section class="panel" data-sec="bar" data-span="full" aria-label="Réglages du bloc"><div class="bar" id="bar"></div><div id="focusbox"></div></section>
 <section class="panel" data-sec="session" data-span="full" id="session" aria-label="Séances et progression"></section>
