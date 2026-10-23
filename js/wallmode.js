@@ -9,20 +9,26 @@ const wTries=()=>ls(WT_KEY,{})||{};
 const wGet=k=>((wTries()[BID]||{})[k])||0;
 function wSet(k,n){const a=wTries();a[BID]=a[BID]||{};a[BID][k]=Math.max(0,n);ss(WT_KEY,a);
   const l=hist(),e=l.find(q=>q.bid===BID&&q.k===k&&!q.test);if(e){e.tries=a[BID][k];ss(SVH_KEY,l)}}
-let WM={fix:0,send:false};
+let WM={fix:0,send:false,undo:null};
+let WM_T=null;
+function wUndoStop(){WM.undo=null;clearInterval(WM_T);WM_T=null}
+function wUndoArm(k){wUndoStop();WM.undo={k,until:Date.now()+10000};
+  WM_T=setInterval(()=>{const d=$("wm");if(!d||d.hidden||!WM.undo||Date.now()>=WM.undo.until){wUndoStop()}if(d&&!d.hidden&&!WM.send)wmDraw()},1000)}
 // Essais comptés sur tout le bloc, et mouvement le plus essayé (= le passage le plus dur pour toi)
 const wTotal=()=>Object.values(wTries()[BID]||{}).reduce((a,b)=>a+b,0);
 const wCrux=()=>{const t=wTries()[BID]||{};let k=null,m=0;Object.entries(t).forEach(([i,n])=>{if(n>m){m=n;k=+i}});return k};
 // « Flash ! » / « Enchaîné en N essais » (v44) : enregistre la note du bloc dans le générateur (enchaîné, ressenti, essais, passage le plus dur), puis retour.
 function wmSend(rating){
+  const was=notes().find(x=>x.id===(B.created||("sv_"+BID)))||{}; // note déjà enregistrée pour ce bloc (statut verrouillé)
   const tot=wTotal(),crux=tot>1?wCrux():null; // un flash (0 ou 1 essai) n'indique pas de passage plus dur que les autres
   const id=noteToGen({bid:BID,k:crux==null?0:crux},rating,null);
-  if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=tot||null;t.flash=tot<=1;t.comment=tot<=1?"Flash au pied du mur":"Enchaîné au pied du mur en "+tot+" essais";ss(KEY.notes,a);replay()}}
+  wUndoStop();
+  if(id){const a=notes(),t=a.find(x=>x.id===id);if(t){t.sent=true;t.crux=crux;t.tries=Math.max(tot,was.tries||0)||null;t.flash=was.flash===true?true:was.flash===false?false:tot<=1;t.comment=tot<=1?"Flash au pied du mur":"Enchaîné au pied du mur en "+tot+" essais";ss(KEY.notes,a);replay()}}
   WM.send=false;const mm=$("wmmsg");
   const d=$("wm");if(d)d.querySelector(".wmin").innerHTML=`<section class="wmsend"><h3>Bravo !</h3><p class="wmbig">${tot<=1?"Flash ! Réussi du premier coup.":"Enchaîné en "+tot+" essais."}</p><p>${crux!=null&&tot>1?"Passage le plus dur retenu : mouvement "+(crux+1)+".":""} La note est dans le générateur.</p><div class="wmrow"><button type="button" class="pri" id="wmback">Retour au générateur</button></div></section>`;
   const b=$("wmback");if(b)b.onclick=()=>wmClose();
 }
-function wmOpen(){WM={fix:0,send:false};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
+function wmOpen(){wUndoStop();WM={fix:0,send:false,undo:null};let d=$("wm");if(!d){d=document.createElement("div");d.id="wm";d.className="wm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Mode pied du mur");document.body.appendChild(d)}
   d.hidden=false;document.documentElement.classList.add("wmon");wmDraw()}
 // retour au générateur quand le mode pied du mur a été ouvert depuis le mode grimpeur
 function wmBack(){
@@ -51,7 +57,7 @@ function wmDraw(){
     <section><h3>Ce qui coince</h3>${c0?`<p class="wmbig">${esc(CAUSEN[c0.id])}</p><p>${esc(c0.why)}</p>${C[1]?`<p class="mut">Ensuite : ${C.slice(1,3).map(c=>esc(CAUSEN[c.id].toLowerCase())).join(", ")}.</p>`:""}`:`<p>Aucun point mécanique saillant à ta taille : vérifie le placement des pieds et du bassin.</p>`}</section>
     ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
     ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
-    <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><button type="button" data-wm="minus" aria-label="Retirer un essai"${tries?"":" disabled"}>−</button><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div></section>
+    <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div>${WM.undo&&WM.undo.k===k&&Date.now()<WM.undo.until?`<div class="wmrow wmundo"><button type="button" data-wm="undo">Annuler ce dernier essai</button><span class="mut">fausse manip ? ${Math.ceil((WM.undo.until-Date.now())/1000)} s</span></div>`:""}</section>
     ${atTop?"":sendH}
     <div class="wmrow"><button type="button" data-wm="done">Ce mouvement est passé</button></div>
     <p class="mut" id="wmmsg" role="status"></p></div>`;
@@ -62,8 +68,10 @@ function wmDraw(){
     if(a==="fix")WM.fix++;
     if(a==="send"){WM.send=true}
     if(a==="sendx"){WM.send=false}
-    if(a==="plus"){if(!hist().some(q=>q.bid===BID&&q.k===k&&!q.test))keepCur({tries:0});wSet(k,tries+1)}
-    if(a==="minus")wSet(k,tries-1);
+    // v46 : plus de « − » (pas de triche) ; seul le DERNIER essai peut être annulé, pendant 10 s (fausse manip).
+    // Une fois le délai passé, le compteur ne peut plus que monter : un bloc à 2 essais ne redevient jamais un flash.
+    if(a==="plus"){if(!hist().some(q=>q.bid===BID&&q.k===k&&!q.test))keepCur({tries:0});wSet(k,tries+1);wUndoArm(k)}
+    if(a==="undo"&&WM.undo&&WM.undo.k===k&&Date.now()<WM.undo.until){wSet(k,Math.max(0,tries-1));wUndoStop()}
     if(a==="done"){let e=hist().find(q=>q.bid===BID&&q.k===k&&!q.test);if(!e)e=keepCur({tries});OPEN=e.ts;
       // ouvert depuis le mode grimpeur : on affiche la page du résolveur pour remplir la fiche, au lieu de repartir au générateur
       if(typeof WMONLY!=="undefined"&&WMONLY){WMONLY=false;document.documentElement.classList.remove("wmonly")}

@@ -192,10 +192,11 @@ function renderRate(){
   const done=notes().find(t=>t.id===cur.id);
   if(pendingRate==null&&done)pendingRate=done.rating;
   if(d.dataset.bid!==String(cur.id)){d.dataset.bid=String(cur.id);pendingSent=done&&done.sent!=null?done.sent:null}
-  const vt=voteOf(cur),nm=cur.moves||0,more=ls("trymore",false)===true;
+  const vt=voteOf(cur),nm=cur.moves||0,more=ls("trymore",false)===true,lockd=!!(done&&(done.flash===true||(done.flash===false&&done.tries)));
+  if(lockd)pendingSent=true;
   d.innerHTML=`<h3>Ton essai <span class="mut" style="font:400 .85rem var(--body)">· bloc estimé ${lab(cur.idx)}${done?` · déjà noté ${NOTE_N[done.rating]} (tu peux corriger)`:""}</span></h3>
   <div class="tryq">
-    <div class="grp"><span>Enchaîné ?</span><div class="seg" role="group" aria-label="Enchaîné ?"><button data-s="1" aria-pressed="${pendingSent===true}">Oui</button><button data-s="0" aria-pressed="${pendingSent===false}">Pas encore</button></div></div>
+    ${lockd?`<div class="grp"><span>Au pied du mur</span><b class="lockd" title="Enregistré au pied du mur : non modifiable">${done.flash?"⚡ Flash":"Enchaîné en "+done.tries+" essais"} 🔒</b></div>`:`<div class="grp"><span>Enchaîné ?</span><div class="seg" role="group" aria-label="Enchaîné ?"><button data-s="1" aria-pressed="${pendingSent===true}">Oui</button><button data-s="0" aria-pressed="${pendingSent===false}">Pas encore</button></div></div>`}
     <div class="grp"><span>Ressenti</span><div class="seg" role="group" aria-label="Ressenti après essai">${NOTE_N.map((n,i)=>`<button data-r="${i}" aria-pressed="${pendingRate===i}">${n}</button>`).join("")}</div></div>
     <div class="grp"><span>Ce bloc te plaît ?</span><div class="seg" role="group" aria-label="Avis sur le bloc"><button data-v="1" aria-pressed="${vt===1}">J'aime</button><button data-v="-1" aria-pressed="${vt===-1}">Pas pour moi</button></div></div>
     <button class="pri" id="nsave"${pendingRate==null?" disabled":""} title="${pendingRate==null?"Choisis d'abord ton ressenti":""}">${done?"Mettre à jour":"Enregistrer"}</button>
@@ -213,6 +214,7 @@ function renderRate(){
     if(pendingRate==null||!cur)return;
     if(!cur.id)cur.id=Date.now().toString(36);
     const t={id:cur.id,ts:Date.now(),rating:pendingRate,comment:$("ncom").value.trim(),idx:cur.idx,mv:cur.mv,kind:cur.kind,hands:[...new Set(cur.hands.map(x=>x.n))],block:cur,crux:$("ncrux").value===""?null:+$("ncrux").value,key:cur.key?cur.key.k:null,sent:pendingSent,font:$("nfont").value||null};
+    if(done&&done.flash!=null){t.flash=done.flash;t.tries=done.tries||null;t.sent=true} // statut verrouillé (pied du mur)
     const a=notes().filter(x=>x.id!==t.id);a.push(t);ss(KEY.notes,a.slice(-300));
     replay();renderNotes();renderRate();$("nsave").textContent="✓ Note enregistrée";
   };

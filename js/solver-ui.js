@@ -255,6 +255,8 @@ function noteToGen(e,rating,font){
   const hands=[...S.h0.map(x=>({n:x.h.n})),...S.mv.flatMap((m,k)=>[{n:m.h.n,ord:k+1},...(m.pair?[{n:m.pair.h.n,ord:k+1}]:[])])];
   const id=B.created||("sv_"+BID),t={id,ts:Date.now(),rating,comment:"Noté depuis le résolveur (mouvement "+(e.k+1)+" débloqué)",idx:B.level,mv:B.style,kind:B.kind,
     hands:[...new Set(hands.map(x=>x.n))],block:{hands,src:"solveur"},crux:e.k,key:B.key==null?null:B.key,code:CODE,font:font||null};
+  const prev=notes().find(x=>x.id===id); // v46 : le statut flash et le nombre d'essais déjà enregistrés sont verrouillés
+  if(prev){if(prev.flash!=null)t.flash=prev.flash;if(prev.tries)t.tries=prev.tries;if(prev.sent)t.sent=true}
   ss(KEY.notes,notes().filter(x=>x.id!==id).concat([t]).slice(-300));replay();renderNotesImp();return id;
 }
 // ---------- Blocs sauvegardés dans le générateur (même stockage) ----------
