@@ -50,13 +50,18 @@ const drawWall=r=>{const s=$("wall");s.setAttribute("viewBox",vbFor(wallView));s
 // Sur téléphone (dessin plus large que l'écran, défilement horizontal) : simplement centré dans sa ligne.
 function alignSolve(){
   const b=$("cbsolve"),cb=$("codebar"),svg=$("wall");if(!b||!cb||!svg)return;
-  b.style.marginLeft="";cb.style.justifyContent="";
+  b.style.marginLeft="";cb.style.justifyContent="";b.style.transform="";
   if(innerWidth<=700||!b.offsetParent)return;
   const m=svg.getScreenCTM();if(!m)return;
   const p=WALL.panels[0],one=typeof wallView!=="undefined"&&wallView!=="all"||WALL.panels.length<2;
   const sr=svg.getBoundingClientRect(),x=one?(sr.left+sr.right)/2:m.a*(p.x0+p.w/2)+m.e;
   const r=cb.getBoundingClientRect(),w=b.getBoundingClientRect().width;
   cb.style.justifyContent="flex-start";b.style.marginLeft=Math.max(0,Math.min(r.width-w,x-r.left-w/2))+"px";
+  // vertical (v38) : au milieu de l'espace libre entre la barre des modes et le haut du pan gauche (mur entier seulement)
+  if(one)return;
+  const pr=[...svg.querySelectorAll('rect[fill="var(--wall)"]')][0],bar=document.querySelector(".wallbar");if(!pr||!bar)return;
+  const y0=bar.getBoundingClientRect().bottom,y1=pr.getBoundingClientRect().top,br=b.getBoundingClientRect();
+  const dy=(y0+y1)/2-(br.top+br.bottom)/2;if(dy>1)b.style.transform="translateY("+Math.round(dy)+"px)";
 }
 (function(){const go=()=>requestAnimationFrame(alignSolve),s=document.getElementById("wall");
   if(s&&window.MutationObserver)new MutationObserver(go).observe(s,{attributes:true,attributeFilter:["viewBox"],childList:true});
