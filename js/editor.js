@@ -203,4 +203,6 @@ function syncMode(){
   const c=isClimber();
   document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.mode==="climb")===c)));
   const ob=document.getElementById("openbar");if(ob)ob.hidden=c;
+  // mode grimpeur : pas d'outils d'ouvreur (résolveur, cases d'affichage du déroulé et du plan de montage)
+  document.body.classList.toggle("climbmode",c);
 }
