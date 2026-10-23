@@ -237,10 +237,12 @@ function renderTaste(){
   <div class="row"><label class="sw"><input type="checkbox" id="prefon"${on?" checked":""}><span>Tenir compte de mes avis (J'aime / Pas pour moi)</span></label>
   <label class="f" for="prefk"><span>Force</span><select id="prefk">${optHtml([[1,"Légère"],[2,"Moyenne"],[3,"Forte"]],CFG.prefK||2)}</select></label>
   <button id="prefreset">Oublier mes avis</button></div>
+  <details class="ssh" id="tastedet"${ls("tasteopen",false)===true?" open":""}><summary>Mes avis (${n})</summary>
   <p class="mut" style="margin:4px 0">${n<PREF_MIN?`${n} avis enregistré${n>1?"s":""} : il en faut au moins ${PREF_MIN} pour que le générateur s'en serve.`:`${n} avis enregistrés.`}</p>
   ${like.length?`<p style="margin:2px 0"><b>Tu aimes :</b> ${like.map(([k])=>esc(featLabel(k))).join(", ")}.</p>`:""}
   ${avoid.length?`<p style="margin:2px 0"><b>Tu évites :</b> ${avoid.map(([k])=>esc(featLabel(k))).join(", ")}.</p>`:""}
-  ${cx.n?`<p class="mut" style="margin:2px 0">Passage clé : le moteur a vu juste ${cx.hit} fois sur ${cx.n} (${Math.round(cx.hit/cx.n*100)} %).</p>`:""}`;
+  ${cx.n?`<p class="mut" style="margin:2px 0">Passage clé : le moteur a vu juste ${cx.hit} fois sur ${cx.n} (${Math.round(cx.hit/cx.n*100)} %).</p>`:""}</details>`;
+  $("tastedet").addEventListener("toggle",e=>ss("tasteopen",e.target.open));
   $("prefon").onchange=e=>{CFG.prefOn=e.target.checked;saveCfg()};
   $("prefk").onchange=e=>{CFG.prefK=+e.target.value;saveCfg()};
   let armed=false;$("prefreset").onclick=e=>{if(!armed){armed=true;e.target.textContent="Confirmer : oublier tous mes avis";return}ss(KEY.prefs,[]);prefReplay();renderTaste();renderRate()};
