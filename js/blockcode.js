@@ -44,10 +44,60 @@ function downloadText(name,txt,type){const a=document.createElement("a");a.href=
 function renderCodeBar(r){
   const d=$("codebar");if(!d)return;
   if(!r||!r.seq){d.innerHTML="";return}
-  d.innerHTML=`<span class="mut">Graine <b id="seedtxt">${esc(r.seed||"–")}</b></span><button id="cbcopy">Copier le code du bloc</button><button id="cbfile">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><label class="f" style="flex-direction:row;align-items:center;gap:6px"><span>Rejouer une graine</span><input type="text" id="seedin" size="8" placeholder="ex. 1x9k2" aria-label="Graine à rejouer"></label><button id="cbseed">Rejouer</button><span class="mut" id="cbmsg" role="status"></span>`;
+  d.innerHTML=`<span class="mut"><abbr class="gl" tabindex="0" title="Graine : le numéro du tirage au hasard de ce bloc. Elle ne suffit pas toujours à le retrouver à l'identique : pour le garder ou l'envoyer, utilise « Partager » ou « Sauvegarder ce bloc ».">Graine</abbr> <b id="seedtxt">${esc(r.seed||"–")}</b></span><button id="cbcopy">Copier le code du bloc</button><button id="cbfile">Exporter (.json)</button><button id="cbsolve" class="pri" title="Analyse le mouvement où tu coinces et propose des méthodes">Résoudre ce bloc</button><label class="f" style="flex-direction:row;align-items:center;gap:6px"><span>Rejouer une graine</span><input type="text" id="seedin" size="8" placeholder="ex. 1x9k2" aria-label="Graine à rejouer"></label><button id="cbseed">Rejouer</button><button id="cbshare" class="pri">Partager le bloc</button><button id="cbprint">Imprimer</button><span class="mut" id="cbmsg" role="status"></span>`;
   const msg=t=>{$("cbmsg").textContent=t;setTimeout(()=>{if($("cbmsg"))$("cbmsg").textContent=""},2500)};
   $("cbcopy").onclick=async()=>{const c=blockCode(r);try{await navigator.clipboard.writeText(c);msg("Code copié ("+c.length+" caractères)")}catch(e){const t=document.createElement("textarea");t.value=c;document.body.appendChild(t);t.select();try{document.execCommand("copy");msg("Code copié")}catch(_){msg("Copie impossible : utilise Exporter")}t.remove()}};
   $("cbfile").onclick=()=>downloadText("bloc-"+(r.seed||r.id||"x")+".json",JSON.stringify(blockObject(r),null,1));
   $("cbsolve").onclick=()=>openSolver(blockCode(r));
   $("cbseed").onclick=()=>{const v=$("seedin").value.trim();if(v)generate(v)};
+  $("cbprint").onclick=()=>window.print();
+  $("cbshare").onclick=async()=>{
+    let url;try{url=await shareLink(r)}catch(e){msg("Lien impossible à créer : utilise « Copier le code du bloc »");return}
+    if(navigator.share){try{await navigator.share({title:"Bloc KAMOUBLOCS",text:"Un bloc à essayer ("+lab(r.idx)+", "+r.moves+" mouvements) :",url});return}catch(e){if(e&&e.name==="AbortError")return}}
+    try{await navigator.clipboard.writeText(url);msg("Lien copié : colle-le dans un message ("+url.length+" caractères)")}
+    catch(e){const t=document.createElement("textarea");t.value=url;document.body.appendChild(t);t.select();try{document.execCommand("copy");msg("Lien copié")}catch(_){msg("Copie impossible")}t.remove()}
+  };
+}
+
+// ---------- Lien de partage (v30) ----------
+// Le lien porte le bloc complet (tel qu'affiché) + le mur + le code du résolveur, compressés, après « #b= ».
+// Rien ne passe par un serveur : tout est dans le lien. Ouvert par quelqu'un qui a le même mur et les mêmes prises,
+// le bloc s'affiche directement dans le générateur ; sinon on propose de l'ouvrir dans le résolveur (qui sait relire un autre mur).
+const SH_PRE="#b=",SH_RAW="#u=";
+const bytesB64u=u=>{let s="";for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+const b64uBytes=t=>{const s=atob(t.replace(/-/g,"+").replace(/_/g,"/"));const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u};
+async function zip(txt){const cs=new CompressionStream("deflate-raw"),w=cs.writable.getWriter();w.write(new TextEncoder().encode(txt));w.close();return new Uint8Array(await new Response(cs.readable).arrayBuffer())}
+async function unzip(u){const ds=new DecompressionStream("deflate-raw"),w=ds.writable.getWriter();w.write(u);w.close();return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer())}
+async function shareLink(r){
+  const o={app:"kamoublocs",v:1,r,wall:bcWall(),c:blockObject(r)},txt=JSON.stringify(o),base=location.origin+location.pathname;
+  if(typeof CompressionStream==="function")return base+SH_PRE+bytesB64u(await zip(txt));
+  return base+SH_RAW+b64u(txt);
+}
+async function readShareHash(h){
+  if(h.indexOf(SH_PRE)===0)return JSON.parse(await unzip(b64uBytes(h.slice(SH_PRE.length))));
+  if(h.indexOf(SH_RAW)===0)return JSON.parse(unb64u(h.slice(SH_RAW.length)));
+  return null;
+}
+const hasShareHash=()=>location.hash.indexOf(SH_PRE)===0||location.hash.indexOf(SH_RAW)===0;
+// Ouvre le bloc reçu par lien. Renvoie false si le lien est illisible (le générateur tire alors un bloc normal).
+async function openShared(){
+  let o=null;try{o=await readShareHash(location.hash)}catch(e){o=null}
+  try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+  if(!o||o.app!=="kamoublocs"||!o.r||!o.r.hands)return false;
+  const same=JSON.stringify(o.wall&&o.wall.panels)===JSON.stringify(bcWall().panels)&&(o.wall.pitch||20)===(WALL.pitch||20);
+  const holdsOk=(o.r.place||[]).every(p=>{const h=byN(p.n);return h&&!(h.custom&&!(o.c&&o.c.holds&&o.c.holds[p.n]&&o.c.holds[p.n].name===h.type))});
+  const note=document.createElement("div");note.id="sharemsg";note.className="vd info";note.setAttribute("role","status");
+  const sec=document.querySelector('[data-sec="result"]');
+  if(same&&holdsOk){
+    o.r.id=o.r.id||Date.now().toString(36);autoView(o.r);show(o.r);
+    note.textContent="Bloc reçu par lien : le voici. « Générer un bloc » en tire un nouveau.";
+    if(sec)sec.insertBefore(note,sec.firstChild);
+    if(typeof genCount!=="undefined")genCount++;
+    setTimeout(()=>{if(sec)sec.scrollIntoView({block:"start"})},50);
+    return true;
+  }
+  note.innerHTML=`Ce bloc a été ouvert sur un autre mur ou avec d'autres prises que les tiennes, le générateur ne peut pas le poser ici. <button id="shsolve" class="pri">L'ouvrir dans le résolveur</button>`;
+  if(sec)sec.insertBefore(note,sec.firstChild);
+  const b=$("shsolve");if(b)b.onclick=()=>openSolver("GB1-"+b64u(JSON.stringify(o.c)));
+  return false;
 }

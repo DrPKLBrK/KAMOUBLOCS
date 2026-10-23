@@ -198,11 +198,28 @@ html[data-sum=card] details>summary{border:var(--cbw,1px) solid var(--ctlline,va
 .cbl{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}.cbdot{stroke:var(--card);stroke-width:2}.cbx{stroke:var(--mut);stroke-width:1}
 .cbtip{position:absolute;top:6px;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:.85rem;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.12);max-width:170px}
 .cbleg{display:flex;gap:14px;font-size:.88rem;color:var(--mut)}.cbleg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+html:not(.expert) [data-sec=bench],html:not(.expert) [data-sec=calib]{display:none!important}
+abbr.gl{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
+.glpop{display:block;font-size:.85rem;font-weight:400;color:var(--fg);background:var(--soft);border-radius:6px;padding:4px 8px;margin:4px 0}
+/* impression (v30) : le mur, le déroulé et le plan de montage, en clair, sans boutons */
+@media print{
+  :root,:root[data-theme="dark"],:root:not([data-theme="light"]){--bg:#fff;--card:#fff;--fg:#13202a;--mut:#566975;--line:#cad4da;--soft:#eef1f3;--ac:#0a6d78;--acfg:#fff;--acsoft:#d6eef0;--wall:#e6d2ad;--hole:#a98b5e;--gap:#8d99a2;color-scheme:light}
+  body{padding:0;background:#fff}
+  .page{display:block;max-width:none}
+  .page>[data-sec]:not([data-sec=result]):not([data-sec=seq]):not([data-sec=mount]),.fab,#editor,#booterr,.devwarn,#sharemsg,.wallbar,#codebar,#openbar,.hidebar,[data-sec=mount] .seg,.mt input,.glpop{display:none!important}
+  .panel{border:0;padding:0 0 10px;box-shadow:none}
+  [data-sec=result]::before{content:"KAMOUBLOCS · bloc à ouvrir";display:block;font:700 1.2rem var(--display);margin-bottom:6px}
+  #wall{min-width:0!important}.svgw{overflow:visible}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .mount{grid-template-columns:repeat(3,1fr)}.mt{break-inside:avoid}
+  .st{break-inside:avoid}[data-sec=seq]{break-before:auto}
+  abbr.gl{text-decoration:none}
+}
 .devwarn{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:10px;padding:10px 12px}
 </style>
 </head><body>
 <div class="page" id="page">
-<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v29</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
+<header data-sec="head" data-span="full"><h1>Générateur de blocs <small id="appver" style="font-size:.5em;font-weight:500;color:var(--mut)">v30</small></h1><p class="sub">Blocs pensés pour tout ton mur : verticaux, traversées, diagonales, passages du coin. Chaque génération tire un parcours, un rythme et des zones différents.</p><p style="margin:8px 0 0"><button id="opensolve" type="button">Ouvrir le résolveur</button></p></header>
 
 <section class="panel" data-sec="bar" data-span="full" aria-label="Réglages du bloc"><div class="bar" id="bar"></div><div id="focusbox"></div></section>
 <section class="panel" data-sec="session" data-span="full" id="session" aria-label="Séances et progression"></section>

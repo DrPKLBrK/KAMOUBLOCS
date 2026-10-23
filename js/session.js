@@ -38,6 +38,7 @@ function ssStart(tpl){
   if(ssActive())return;const T=SS_TPL[tpl],P=ssPlan(),steps=[];
   T.steps.forEach(([role,n,o])=>{for(let i=0;i<n;i++)steps.push({role,i,n,o})});
   const a=sessions();a.push({sid:Date.now().toString(36),tpl,ts:Date.now(),w0:P.W,steps,cur:0,end:null});saveSessions(a);renderSession();
+  ssNext(); // le premier bloc de la séance est généré tout de suite (avant, il fallait cliquer « Bloc suivant » en plus)
 }
 // Réglages imposés pour l'étape k (mécanisme genWith, focus.js).
 function ssOver(s,k){
@@ -77,7 +78,7 @@ function renderSession(){
   if(s){
     const T=SS_TPL[s.tpl],done=s.steps.filter(x=>x.id).length;
     d.innerHTML=`<h2>Séance en cours : ${esc(T.name)}</h2><p class="mut">Niveau de travail : ${fmtW(s.w0)} · ${done} / ${s.steps.length} blocs</p>
-    <ol class="ssl">${s.steps.map((x,k)=>{const r=x.id?ssResult(x.id):null;return`<li class="${k===s.cur?"cur":x.id?"done":x.skip?"skip":""}"><b>${ROLE[x.role]} ${x.i+1}/${x.n}</b> <span class="mut">${x.id?esc(svLab(x.idx))+(r==null?" · à noter":r===1?" · réussi":r===0?" · raté":" · noté"):x.skip?"passé":k===s.cur?"au tour de celui-ci":""}</span></li>`}).join("")}</ol>
+    <ol class="ssl">${s.steps.map((x,k)=>{const r=x.id?ssResult(x.id):null;return`<li class="${k===s.cur?"cur":x.id?"done":x.skip?"skip":""}"><b>${ROLE[x.role]} ${x.i+1}/${x.n}</b> <span class="mut">${x.id?esc(svLab(x.idx))+(r==null?" · à noter":r===1?" · réussi":r===0?" · raté":" · noté"):x.skip?"passé":k===s.cur?"à faire maintenant":""}</span></li>`}).join("")}</ol>
     <div class="row">${s.cur<s.steps.length?`<button class="pri" id="ssnext">Bloc suivant : ${esc(ROLE[s.steps[s.cur].role])} ${s.steps[s.cur].i+1}/${s.steps[s.cur].n}</button><button id="ssskip">Passer cette étape</button>`:""}<button id="ssend">${s.cur<s.steps.length?"Arrêter la séance":"Terminer la séance"}</button></div>
     <p class="mut">Après chaque essai, note le bloc dans « Notes et apprentissage » (ressenti et « Enchaîné ? ») : c'est ce qui fait progresser le niveau de travail.</p>`;
     const n=$("ssnext");if(n)n.onclick=ssNext;const k=$("ssskip");if(k)k.onclick=ssSkip;$("ssend").onclick=ssEnd;return;

@@ -209,7 +209,9 @@ function bindCustomForm(after){
   $("cfkeep").onchange=e=>{CF.keep=e.target.checked;cfRender()};
   $("cftol").oninput=e=>{CF.tol=+e.target.value;$("cftolv").textContent=e.target.value;cfRender()};
   const cv=$("cfcv");cv.onclick=e=>{const r=cv.getBoundingClientRect();CF.hx=clamp((e.clientX-r.left)/r.width,0,1);CF.hy=clamp((e.clientY-r.top)/r.height,0,1);cfRender()};
-  $("cfadd").onclick=()=>{const n=cfAdd();if(n){$("cfmsg").textContent="Prise n°"+n+" ajoutée. Elle est active et sera utilisée par le générateur."+memWarn();CF.src=null;$("cfzone").hidden=true;f.value="";after&&after()}};
+  $("cfadd").onclick=()=>{const n=cfAdd();if(n){const t="✓ Prise n°"+n+" ajoutée. Elle est active et sera utilisée par le générateur."+memWarn();CF.src=null;$("cfzone").hidden=true;f.value="";
+    // le tableau est redessiné par after() : on rouvre le formulaire et on y remet le message, sinon il disparaît aussitôt
+    after&&after();const m=$("cfmsg");if(m){const d=m.closest("details");if(d)d.open=true;m.textContent=t;m.scrollIntoView({block:"nearest"})}}};
 }
 const delCustom=n=>{CUST=CUST.filter(c=>c.n!==n);saveCust();const i=holds.findIndex(h=>h.n===n);if(i>=0)holds.splice(i,1);delete IMG[n]};
 

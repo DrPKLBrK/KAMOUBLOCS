@@ -224,7 +224,10 @@ function gen1(c){
   const s=best,fe=s.allf,ho=[],fh2=s.hands.map(x=>x.h.n);
   s.h0.forEach(x=>ho.push({...x,role:'start'}));
   s.mv.forEach((m,k)=>{ho.push({o:m.o,h:m.h,rho:m.rho,role:m===s.mv[s.mv.length-1]?'finish':'hand',ord:k+1});if(m.pair)ho.push({o:m.pair.o,h:m.pair.h,rho:m.pair.rho,role:'hand',ord:k+1})});
-  const side=(a,b)=>Math.abs(a.o.x-b.o.x)<5?(a.o.y<=b.o.y?'basse':'haute'):a.o.x<b.o.x?'gauche':'droite';
+  // Prises de départ l'une au-dessus de l'autre : on dit quand même gauche ou droite (« main haute / basse » ne disait pas laquelle).
+  // La main qui part au 1er mouvement prend le côté de ce mouvement ; l'autre reste sur la prise fixe.
+  const m0=s.mv[0],rel=m0&&!m0.pair&&m0.ot?s.h0.find(x=>x.o.id!==m0.ot.o.id):null;
+  const side=(a,b)=>Math.abs(a.o.x-b.o.x)<5?(rel?(a===rel?m0.side:(m0.side==='gauche'?'droite':'gauche')):(a.o.y<=b.o.y?'gauche':'droite')):a.o.x<b.o.x?'gauche':'droite';
   const lines=["Départ : main "+side(s.h0[0],s.h0[1])+" sur n°"+s.h0[0].h.n+" ("+s.h0[0].h.type+", "+s.h0[0].rho+"°), main "+side(s.h0[1],s.h0[0])+" sur n°"+s.h0[1].h.n+" ("+s.h0[1].h.type+", "+s.h0[1].rho+"°)"];
   const f0=fe.filter(q=>!s.mv.some(m=>m.nf.includes(q)));
   lines.push(f0.length?"  Pied"+(f0.length>1?"s":"")+" de départ : "+f0.map(q=>"n°"+q.h.n).join(", "):"  Pieds libres (pas de prise de pied)");

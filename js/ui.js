@@ -1,8 +1,10 @@
 // UI : menus, réglages, profils, prises éditables, favoris. Les réglages sont gardés dans le navigateur.
-const CFG0={lmin:1,lmax:3,mv:'surprise',hs:'mix',zone:'all',len:'any',lancers:true,zoom:true,theme:'auto',hideMv:[],hideHs:[],multi:false};
+const CFG0={lmin:1,lmax:3,mv:'surprise',hs:'mix',zone:'all',len:'any',lancers:true,zoom:true,theme:'auto',expert:false,hideMv:[],hideHs:[],multi:false};
 let CFG={...CFG0,...ls(KEY.cfg,{})};
 if(!ZONEN[CFG.zone])CFG.zone='all'; // la zone enregistrée n'existe plus sur ce mur
 const saveCfg=()=>ss(KEY.cfg,CFG);
+// Mode expert : le benchmark et le tableau de calibration (outils pour régler le moteur) restent cachés sinon.
+function applyExpert(){document.documentElement.classList.toggle("expert",!!CFG.expert)}
 function applyTheme(){const r=document.documentElement;r.removeAttribute("data-theme");if(CFG.theme!=="auto")r.setAttribute("data-theme",CFG.theme);if(typeof edApply==="function")edApply()}
 const climbName=()=>"Profil "+(PROF.H/100).toFixed(2).replace(".",",")+" m";
 function saveClimber(){const bmi=PROF.mass/Math.pow(PROF.H/100,2);PROF.corp=clamp(Math.round((bmi-22.8)/2.5)+3,1,5);ss("climber1",PROF);applyClimber();const s=$("climbsel");if(s){s.options[1].textContent=climbName();s.value=PROF.on?"1":"0"}}
@@ -35,7 +37,15 @@ function buildBar(){
   $("lancers").onchange=e=>{CFG.lancers=e.target.checked;refreshMenus()};
   $("go").onclick=generate;
 }
-let busy=false;
+let busy=false,genCount=0;
+// Après une génération demandée, amène le bloc à l'écran s'il est hors de vue (sur téléphone il est deux écrans plus bas).
+// La toute première génération (au chargement) ne fait pas défiler la page.
+function scrollToResult(){
+  const s=document.querySelector('[data-sec="result"]');if(!s)return;
+  const t=s.getBoundingClientRect().top;if(t>=0&&t<innerHeight*.35)return;
+  const smooth=!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+  s.scrollIntoView({behavior:smooth?"smooth":"auto",block:"start"});
+}
 // Construit une demande de bloc à partir des réglages du bandeau (utilisée par « Générer » et par le benchmark).
 function makeReq(){
   let a=CFG.lmin,z=CFG.lmax;if(a>z)[a,z]=[z,a];
@@ -47,7 +57,7 @@ function makeReq(){
 function generate(seedIn){
   if(busy)return;busy=true;const b=$("go");b.disabled=true;b.textContent="Calcul en cours…";
   const seed=typeof seedIn==="string"&&seedIn.trim()?seedIn.trim().toLowerCase():newSeed();
-  setTimeout(()=>{let r=null;try{r=withSolveCal(()=>withSeed(seed,()=>{const c=makeReq();return gen(c)||gen(c)}))}catch(e){console.error(e)}if(r){r.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);r.seed=seed;if(r.climber===undefined)r.climber=climberObj()}autoView(r);show(r);b.disabled=false;b.textContent="Générer un bloc";busy=false},30);
+  setTimeout(()=>{let r=null;try{r=withSolveCal(()=>withSeed(seed,()=>{const c=makeReq();return gen(c)||gen(c)}))}catch(e){console.error(e)}if(r){r.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);r.seed=seed;if(r.climber===undefined)r.climber=climberObj()}autoView(r);show(r);b.disabled=false;b.textContent="Générer un bloc";busy=false;if(++genCount>1)scrollToResult()},30);
 }
 
 // Choisit la vue du mur : un seul pan si le bloc n'en utilise qu'un, sinon le mur entier.
@@ -106,6 +116,7 @@ function tabPrises(flt=""){
 function tabAff(){
   return `<div class="row"><label class="sw"><input type="checkbox" id="zoom"${CFG.zoom?" checked":""}><span>Agrandir les prises sur le mur (lisibilité)</span></label>
   <label class="f" for="theme"><span>Thème</span><select id="theme">${optHtml([["auto","Automatique"],["light","Clair"],["dark","Sombre"]],CFG.theme)}</select></label></div>
+  <div class="row"><label class="sw"><input type="checkbox" id="expert"${CFG.expert?" checked":""}><span>Mode expert : afficher le benchmark du générateur et le tableau de bord de calibration</span></label></div>
   <div class="row"><button id="wipe">Effacer l'historique de variété</button><span class="mut">Remet à zéro la mémoire qui évite de refaire les mêmes blocs.</span></div>${backupHtml()}`;
 }
 const saveHolds=()=>{const g={},n={},o={};holds.forEach(h=>{g[h.n]=h.grip;if(h.type!==h.type0)n[h.n]=h.type;o[h.n]=h.on});ss(KEY.grips,g);ss(KEY.names,n);ss(KEY.on,o)};
@@ -145,6 +156,7 @@ function renderTab(flt){
   }else{
     $("zoom").onchange=e=>{CFG.zoom=e.target.checked;saveCfg();drawWall(cur)};
     $("theme").onchange=e=>{CFG.theme=e.target.value;saveCfg();applyTheme()};
+    $("expert").onchange=e=>{CFG.expert=e.target.checked;saveCfg();applyExpert()};
     bindBackup();
     $("wipe").onclick=()=>{ss(KEY.hist,[]);ss(KEY.heat,{});$("wipe").textContent="Historique effacé"};
   }
