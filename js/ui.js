@@ -58,12 +58,12 @@ function makeReq(){
   const tgt=LVL[a][1]+Math.random()*(LVL[z][2]-LVL[a][1]);
   const pool=MVS.filter(k=>!CFG.hideMv.includes(k)&&(CFG.lancers!==false||(k!=="dyno"&&k!=="coord")));
   const hsPool=["crimp","sloper","pinch","arc"].filter(k=>!CFG.hideHs.includes(k));
-  return{tgt,t:clamp((tgt-1)/8,0,1),mv:CFG.mv,hs:CFG.hs,surp:CFG.mv==="surprise",pool,hsPool,zone:CFG.zone,len:CFG.len==="any"?null:CFG.len,lancers:CFG.lancers,skipPosed:!!CFG.multi&&!isClimber()};
+  return{tgt,lo:LVL[a][1],hi:LVL[z][2],t:clamp((tgt-1)/8,0,1),mv:CFG.mv,hs:CFG.hs,surp:CFG.mv==="surprise",pool,hsPool,zone:CFG.zone,len:CFG.len==="any"?null:CFG.len,lancers:CFG.lancers,skipPosed:!!CFG.multi&&!isClimber()};
 }
 function generate(seedIn){
   if(busy)return;busy=true;const b=$("go");b.disabled=true;b.textContent="Calcul en cours…";
   const seed=typeof seedIn==="string"&&seedIn.trim()?seedIn.trim().toLowerCase():newSeed();
-  setTimeout(()=>{let r=null;try{r=withSolveCal(()=>withSeed(seed,()=>{const c=makeReq();return gen(c)||gen(c)}))}catch(e){console.error(e)}if(r){r.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);r.seed=seed;if(r.climber===undefined)r.climber=climberObj()}autoView(r);show(r);b.disabled=false;b.textContent="Générer un bloc";busy=false;if(++genCount>1)scrollToResult()},30);
+  setTimeout(()=>{let r=null;try{r=withSolveCal(()=>withSeed(seed,()=>{const c=makeReq();return gen(c)}))}catch(e){console.error(e)}if(r){r.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);r.seed=seed;if(r.climber===undefined)r.climber=climberObj()}autoView(r);show(r);b.disabled=false;b.textContent="Générer un bloc";busy=false;if(++genCount>1)scrollToResult()},30);
 }
 
 // Choisit la vue du mur : un seul pan si le bloc n'en utilise qu'un, sinon le mur entier.

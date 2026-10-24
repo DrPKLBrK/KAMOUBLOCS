@@ -177,10 +177,17 @@ html.wmonly .page{visibility:hidden} /* ouvert depuis le mode grimpeur : seul le
 .wmrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.wmrow>button{flex:1 1 160px}
 .wmtries .wmrow>button:first-child{flex:0 0 64px}.wmn{font:800 2.4rem var(--display);min-width:2.5ch;text-align:center}
 .wmok{width:100%;font-size:1.25rem!important}
+/* v49 : mini-mur au pied du mur */
+.wmwallw{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px}
+.wmwall{display:block;margin:0 auto;width:100%;height:auto;max-height:34vh;font-family:var(--display)}
+.wmleg{text-align:center;margin:6px 0 0;font-size:.9rem}
+.wmleg .lg{display:inline-block;width:12px;height:12px;border-radius:50%;margin:0 4px 0 10px;vertical-align:-1px;border:2.4px solid var(--ac)}
+.wmleg .lg-f{border-style:dashed;border-color:var(--fg)}
+.wmleg .lg-p{border-color:var(--foot)}
 </style>
 <div class="page">
 <header class="top">
-  <div><h1>Résolveur de blocs <small class="ver">v48</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
+  <div><h1>Résolveur de blocs <small class="ver">v49</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
   <div class="acts"><a class="btnl" id="togen" href="index.html">Générateur</a></div>
 </header>
 

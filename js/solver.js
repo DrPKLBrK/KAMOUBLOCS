@@ -75,7 +75,7 @@ function svBuild(b){
     const phd=m.hd&&m.hd.length?m.hd.map(r=>R(r)):hd,pft=m.ft?m.ft.map(r=>R(r,1)):ft;
     const nf=pft.filter(x=>!ft.some(p=>p.o===x.o));
     let flag=null;if(m.flag){const st=ft.find(p=>p.o.id===m.flag.id)||R(m.flag,1);flag={stand:st,free:ft.find(p=>p.o!==st.o)||null}}
-    const o={o:t.o,h:t.h,rho:t.rho,ot,hd:phd,ft:pft,nf,flag,pair:m.pair?R(m.pair):null,side:m.side||(t.o.x<ot.o.x?"gauche":"droite"),
+    const o={o:t.o,h:t.h,rho:t.rho,ot,hd:phd,ft:pft,nf,flag,pair:m.pair?R(m.pair):null,side:m.side||(t.o.x<ot.o.x?"gauche":"droite"),main:m.main||null,
       m:{dyn:!!m.dyn,cross:!!m.cross,d:dist(t.o,ot.o),dbl:!!m.pair},tech:m.tech||[],finish:!!m.finish};
     hd=phd;ft=pft;return o;
   });
@@ -230,7 +230,7 @@ function weakFor(id,x){
 }
 function diagnose(A,k,sym){
   const x=A.M[k],m=x.m,Hc=A.Hc,C=[],add=(id,score,why,fix)=>{if(score>0)C.push({id,score:clamp(score,0,1),why,fix:fix||[]})};
-  const n=h=>"n°"+h.n,ns=q=>`${n(q.h)} (${q.h.type.toLowerCase()})`,hand=m.m.cross?(m.side==="gauche"?"droite":"gauche"):m.side;
+  const n=h=>"n°"+h.n,ns=q=>`${n(q.h)} (${q.h.type.toLowerCase()})`,hand=m.main||(m.m.cross?(m.side==="gauche"?"droite":"gauche"):m.side);
   const fs=x.pair||A.camp?null:withBody(H=>footSearch(m,x.pre,x.fixed,x.prev,H,A.camp,!!x.D));
   const footFix=fs?{key:"foot",p:1,t:`Pied ${fs.side} : ${fs.old?`passe de ${n(fs.old.h)} à `:"ajoute "}${n(fs.c.h)}${fs.c.asHand?" (prise de main utilisée en pied)":""} avant de partir. Selon le modèle, ${fs.gains.join(", ")}.`}:null;
   // Portée

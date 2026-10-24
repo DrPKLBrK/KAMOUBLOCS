@@ -35,6 +35,20 @@ const M2FIX={
   catch:[{key:"catch1",p:1,t:"Le second modèle prévoit une réception trop dure pour la prise : vise le sommet de la trajectoire, quand le corps ne monte plus, et garde un pied au mur pour freiner le balancier."}],
   grip:[{key:"axis",p:1,t:"Le second modèle trouve la prise d'arrivée tirée hors de sa direction utile : décale le bassin pour tirer dans son axe avant de la charger."}]
 };
+// v49 : rapport « Essentiel » (par défaut) = sans jargon de modèles. Le détail reste dans « Détaillé ».
+const SIMPLE_WHY={load:"La main fixe porte beaucoup de poids pendant que l'autre part.",feet:"Un pied risque de glisser ou de décoller pendant le mouvement.",
+  reach:"La prise est sûrement hors de portée avec ces pieds.",dyn:"L'élan risque d'être trop court pour atteindre la prise.",catch:"La réception risque d'être dure à tenir sur cette prise.",
+  grip:"La prise d'arrivée est tirée hors de son bon axe.",barn:"Ton corps risque de pivoter comme une porte qui s'ouvre."};
+const SIMPLE_RX=[[/^Le second modèle trouve la prise trop loin avec ces pieds/,"La prise est sûrement trop loin avec ces pieds"],
+  [/^Le second modèle calcule qu'un pied ne tient pas dans cette position/,"Un pied risque de ne pas tenir dans cette position"],
+  [/^Le second modèle juge l'impulsion insuffisante depuis cette position/,"L'élan risque d'être trop court depuis cette position"],
+  [/^Le second modèle prévoit une réception trop dure pour la prise/,"La réception risque d'être trop dure pour la prise"],
+  [/^Le second modèle trouve la prise d'arrivée tirée hors de sa direction utile/,"La prise d'arrivée est tirée hors de son bon axe"],
+  [/^Selon le second modèle\s*:\s*/,""],[/\s*\(?(vu|confirmé) par le second modèle\)?/g,""]];
+const isDet=()=>typeof SP!=="undefined"&&SP&&SP.detail==="det";
+function simpleTxt(t){t=String(t||"");for(const[r,v]of SIMPLE_RX)t=t.replace(r,v);return t.charAt(0).toUpperCase()+t.slice(1)}
+function causeWhy(c){if(isDet())return c.why;if(c.src==="m2"&&SIMPLE_WHY[c.id])return SIMPLE_WHY[c.id];return simpleTxt(c.why)}
+function fixTxt(f){return isDet()?f.t:simpleTxt(f.t)}
 // Fusionne les causes du moteur principal avec la contre-expertise et la confiance apprise.
 function mergeCauses(dg,CMP,x,sym){
   const T=trustTable(),C=dg.C.map(c=>Object.assign({},c)),hit=new Set([...sym].flatMap(s=>SYMMAP[s]||[]));

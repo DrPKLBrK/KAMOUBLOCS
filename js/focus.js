@@ -14,6 +14,7 @@ makeReq=(function(base){return function(){const c=base(),o=REQ_OVER;REQ_OVER=nul
   if(o.tgt!=null)r.tgt=o.tgt;
   if(o.lv!=null){const L=LVL[clamp(o.lv,0,LVL.length-1)];r.tgt=L[1]+Math.random()*(L[2]-L[1])}
   if(o.dl)r.tgt=Math.max(.4,r.tgt+o.dl);
+  if(o.tgt!=null||o.lv!=null||o.dl){r.lo=Math.max(0,r.tgt-1);r.hi=Math.min(10,r.tgt+1)} // bloc de séance ou ciblé : fourchette = cible ± 1 point
   r.t=clamp((r.tgt-1)/8,0,1);r.tag=o.tag||null;return r}})(makeReq);
 // Bloc ciblé ou de séance : son niveau doit tomber près de la cible (le tirage seul s'en écarte souvent de plus d'un point).
 // On garde le plus proche de quelques essais, en s'arrêtant dès qu'un bloc est à moins de REQ_TOL.
@@ -24,6 +25,18 @@ gen=(function(base){return function(c){
   for(let k=0;k<REQ_TRIES;k++){const r=base(c);if(r&&(!best||Math.abs(r.idx-c.tgt)<Math.abs(best.idx-c.tgt)))best=r;
     if(best&&Math.abs(best.idx-c.tgt)<=REQ_TOL||Date.now()-t0>REQ_BUDGET)break}
   if(best)best.tag=Object.assign({tgt:Math.round(c.tgt*10)/10},c.tag);return best}})(gen);
+// v49 : « niveau à vérifier » seulement quand le bloc sort VRAIMENT de la fourchette demandée (et toujours dans ce cas).
+// Si aucun bloc n'est trouvé, ou s'il sort de la fourchette, on relance tout seul (budget 6 s) avant de l'afficher.
+const RANGE_BUDGET=6000,RANGE_TRIES=3;
+const outBy=(r,c)=>!r||!c||c.lo==null?0:r.idx<c.lo?r.idx-c.lo:r.idx>c.hi?r.idx-c.hi:0;
+gen=(function(base){return function(c){
+  const t0=Date.now();let r=base(c);
+  for(let k=0;k<RANGE_TRIES&&(!r||outBy(r,c))&&Date.now()-t0<RANGE_BUDGET;k++){const q=base(c);
+    if(q&&(!r||Math.abs(outBy(q,c))<Math.abs(outBy(r,c))))r=q}
+  if(r&&c&&c.lo!=null){const d=outBy(r,c);
+    r.note=d?(d>0?"Plus dur que la fourchette demandée : peu de solutions avec ce style et ces prises.":"Plus facile que la fourchette demandée : c'est le plus dur que permettent ce style et ces prises."):"";
+    r.noteShort=d?(d>0?"plus dur que demandé":"plus facile que demandé"):""}
+  return r}})(gen);
 function genWith(over){if(busy)return false;REQ_OVER=over;generate();return true}
 
 // ---------- Ce que chaque point faible appelle comme bloc ----------

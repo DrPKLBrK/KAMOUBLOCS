@@ -54,14 +54,17 @@ function wmDraw(){
       <div class="wmt"><b>Mouvement ${k+1} / ${n}</b>${k===AN.crux?' <span class="pill pill-key">clé</span>':""}<small>${esc(stepTitle(k))}</small></div>
       <button type="button" data-wm="next" aria-label="Mouvement suivant"${k<n-1?"":" disabled"}>›</button><button type="button" data-wm="close" aria-label="Fermer le mode pied du mur">✕</button></div>
     <p class="wmh">Vers ${hn(m.h)}${m.pair?" et "+hn(m.pair.h):""} · main fixe ${hn(x.fixed.h)}</p>
+    <div class="wmwallw"><svg id="wmwall" class="wmwall" role="img" aria-label="Mur zoomé sur le mouvement ${k+1}"></svg>
+      <p class="mut wmleg"><span class="lg lg-t"></span>prise visée <span class="lg lg-f"></span>main fixe <span class="lg lg-p"></span>pieds</p></div>
     ${atTop?sendH:""}
-    <section><h3>Ce qui coince</h3>${c0?`<p class="wmbig">${esc(CAUSEN[c0.id])}</p><p>${esc(c0.why)}</p>${C[1]?`<p class="mut">Ensuite : ${C.slice(1,3).map(c=>esc(CAUSEN[c.id].toLowerCase())).join(", ")}.</p>`:""}`:`<p>Aucun point mécanique saillant à ta taille : vérifie le placement des pieds et du bassin.</p>`}</section>
-    ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(f.t)}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
-    ${T?`<section><h3>Trancher : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
+    <section><h3>Ce qui coince</h3>${c0?`<p class="wmbig">${esc(CAUSEN[c0.id])}</p><p>${esc(causeWhy(c0))}</p>${C[1]?`<p class="mut">Ensuite : ${C.slice(1,3).map(c=>esc(CAUSEN[c.id].toLowerCase())).join(", ")}.</p>`:""}`:`<p>Aucun point mécanique saillant à ta taille : vérifie le placement des pieds et du bassin.</p>`}</section>
+    ${f?`<section><h3>À essayer${F.length>1?` · ${WM.fix%F.length+1} / ${F.length}`:""}</h3><p class="wmbig2">${esc(fixTxt(f))}</p>${f.won?`<span class="pill pill-ok">a déjà marché pour toi</span>`:""}${F.length>1?`<button type="button" data-wm="fix">Méthode suivante</button>`:""}</section>`:""}
+    ${T?`<section><h3>${isDet()?"Trancher":"Petit test"} : ${esc(dis.q.toLowerCase())}</h3><p>${esc(T.t)}</p><div class="wmrow"><button type="button" data-wt="1">${esc(T.yes)}</button><button type="button" data-wt="0">${esc(T.no)}</button></div></section>`:""}
     <section class="wmtries"><h3>Essais sur ce mouvement</h3><div class="wmrow"><span class="wmn" aria-live="polite">${tries}</span><button type="button" class="pri" data-wm="plus">+1 essai</button></div>${WM.undo&&WM.undo.k===k&&Date.now()<WM.undo.until?`<div class="wmrow wmundo"><button type="button" data-wm="undo">Annuler ce dernier essai</button><span class="mut">fausse manip ? ${Math.ceil((WM.undo.until-Date.now())/1000)} s</span></div>`:""}</section>
     ${atTop?"":sendH}
     <div class="wmrow"><button type="button" data-wm="done">Ce mouvement est passé</button></div>
     <p class="mut" id="wmmsg" role="status"></p></div>`;
+  try{drawSolveWall($("wmwall"),k,DGk,true,"wm")}catch(e){const w=d.querySelector(".wmwallw");if(w)w.hidden=true}
   d.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>{const a=b.dataset.wm;
     if(a==="close")return wmClose();
     if(a==="prev"&&SEL.k>0){SEL.k--;WM.fix=0}

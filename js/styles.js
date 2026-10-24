@@ -17,6 +17,7 @@ function styleBonus(c,P,me,o,ot,h,m){
   return b-Math.abs(m.d/reachOf(BODY.hMin)-P.sp)*.9+(h.w<9?.5:h.w>=12?-.5:0)*P.small;
 }
 // Condition obligatoire pour qu'un bloc soit accepté.
+const POWER_MAX=5,ENDUR_MIN=9;
 function styleOk(c,s){
   const y=c.mv;let ok=true;
   const TD=TSTYLE[y];let U=USTYLE[y];if(U&&c.lancers===false&&U.dyn>=2)U={...U,dyn:1};
@@ -26,6 +27,9 @@ function styleOk(c,s){
   else if(y==='hook')ok=s.allf.some(q=>fits('arc',q.h))&&countTech(s,['talon','pointe'])>=1;
   else if(y==='compress'||y==='trav')ok=s.mv.some(m=>m.ot.o.pan!==m.o.pan);
   if(ok&&c.hs!=='mix')ok=[...s.h0,...s.mv].filter(x=>fits(c.hs,x.h)).length>=2;
+  // v49 : la longueur fait partie du style. Puissance = court (5 mouvements au plus), Endurance = long (9 au moins).
+  if(ok&&y==='power')ok=s.mv.length<=POWER_MAX;
+  if(ok&&y==='endur')ok=s.mv.length>=ENDUR_MIN;
   return ok;
 }
 

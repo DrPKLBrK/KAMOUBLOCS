@@ -39,7 +39,7 @@ function show(r){
   }
   const chip=(k,t)=>`<span class="chip"><i>${k}</i>${t}</span>`;
   // résumé d'une ligne (en-tête repliable) : le détail des puces s'ouvre au clic
-  if(ms){const g=typeof gradeTxt==="function"?gradeTxt(r.idx):null;ms.innerHTML=`${esc(lab(r.idx))}${g?" · ≈ "+esc(g.g):""} · ${esc(KINDN[r.kind]||"")} · ${r.moves} mouvements${r.note?' · <span class="err">niveau à vérifier</span>':""}`;const d=$("metd");if(d)d.open=ls("metopen",false)===true}
+  if(ms){const g=typeof gradeTxt==="function"?gradeTxt(r.idx):null;ms.innerHTML=`${esc(lab(r.idx))}${g?" · ≈ "+esc(g.g):""} · ${esc(KINDN[r.kind]||"")} · ${r.moves} mouvements${r.note?' · <span class="err">'+esc(r.noteShort||"niveau à vérifier")+'</span>':""}`;const d=$("metd");if(d)d.open=ls("metopen",false)===true}
   m.innerHTML=chip("Niveau",lab(r.idx))+(typeof gradeTxt==="function"?(g=>`<span class="chip" title="${esc(g.note)}"><i>Cotation</i>≈ ${g.g}${GRF&&GRF.personal?"":" ?"}</span>`)(gradeTxt(r.idx)):"")+chip("Parcours",KINDN[r.kind])+chip("Mouvement",MVN[r.mv])+chip("Prises",HSN[r.hs])+chip("Mains",r.moves+" mouvements")+(r.key?chip("Passage clé","mouvement "+(r.key.k+1)):"")+chip("Lancers",r.dy)+chip("Croisés",r.cr)+(r.techs&&Object.keys(r.techs).some(k=>!["dyno","dyno2","croise"].includes(k))?chip("Gestes",Object.entries(r.techs).filter(([k])=>!["dyno","dyno2","croise"].includes(k)).map(([k,v])=>techName(k)+(v>1?" ×"+v:"")).join(", ")):"")+chip("Étalement",r.span.w+" × "+r.span.h+" cm")+(r.note?`<span class="err">${esc(r.note)}</span>`:"");
   q.innerHTML=seqHtml(r.lines,r.key?r.key.k+1:-1);
   if(typeof renderCodeBar==='function')renderCodeBar(r);

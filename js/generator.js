@@ -151,7 +151,7 @@ function gen1(c){
     if(!feetFix(n,n.hands))return null;
     n.sc+=(U?uBonus(U,{dyn:true},[]):0)+(d0-Math.min(tdist(o1,i),tdist(o2,i)))*.03-Math.abs(m.cost-(step===P.cx?Ct:.65*Ct))*.6+(c.mv==='dyno'||c.mv==='coord'?2.5:0)+Math.random()*.8;
     n.cs.push(m.cost);n.dy++;
-    n.mv.push({side:L?'gauche':'droite',o:o1,h:h1,rho:m.rho1,m:{cost:m.cost,rho:m.rho1,dyn:true,cross:false,d:dist(o1,me.o),dbl:true},nf:n.nf,ot,hd:n.hands.slice(),ft:n.feet.slice(),pair:{o:o2,h:h2,rho:m.rho2}});
+    n.mv.push({side:L?'gauche':'droite',slot:idx,o:o1,h:h1,rho:m.rho1,m:{cost:m.cost,rho:m.rho1,dyn:true,cross:false,d:dist(o1,me.o),dbl:true},nf:n.nf,ot,hd:n.hands.slice(),ft:n.feet.slice(),pair:{o:o2,h:h2,rho:m.rho2}});
     n.sg.push(h1.fam+m.rho1+'+'+h2.fam+m.rho2);{const mm=n.mv[n.mv.length-1];mm.tech=techOf(mm,{hd:s.hands,ft:s.feet},camp)}
     return n;
   }
@@ -187,7 +187,7 @@ function gen1(c){
         if(!feetFix(n,n.hands))continue;
         const flag=!f&&!m.dyn&&flagP>0&&Math.random()<flagP?tryFlag(s,o,ot,me):null;
         n.cs.push(m.cost);if(m.dyn)n.dy++;if(m.cross)n.cr++;
-        const mvo={side:o.x<ot.o.x?'gauche':'droite',o,h,rho:m.rho,m,nf:n.nf,ot,hd:n.hands.slice(),ft:n.feet.slice(),flag};mvo.tech=techOf(mvo,{hd:s.hands,ft:s.feet},camp);
+        const mvo={side:o.x<ot.o.x?'gauche':'droite',slot:idx,o,h,rho:m.rho,m,nf:n.nf,ot,hd:n.hands.slice(),ft:n.feet.slice(),flag};mvo.tech=techOf(mvo,{hd:s.hands,ft:s.feet},camp);
         const TD=TSTYLE[c.mv],tb=(TD&&TD.tech.some(t=>mvo.tech.includes(t))?TD.bonus:0)+(U?uBonus(U,m,mvo.tech):0);
         n.sc+=(d0-tdist(o,i))*.03-Math.abs(m.cost-(step===P.cx?Ct:.65*Ct))*.6+(flag?1.2*(c.mv==='flag'?1:.3):0)+tb+styleBonus(c,P,me,o,ot,h,m)+Math.random()*.8;
         n.mv.push(mvo);n.sg.push(h.fam+m.rho+(flag?'F':''));
@@ -231,6 +231,13 @@ function gen1(c){
   const m0=s.mv[0],rel=m0&&!m0.pair&&m0.ot?s.h0.find(x=>x.o.id!==m0.ot.o.id):null;
   const side=(a,b)=>Math.abs(a.o.x-b.o.x)<5?(rel?(a===rel?m0.side:(m0.side==='gauche'?'droite':'gauche')):(a.o.y<=b.o.y?'gauche':'droite')):a.o.x<b.o.x?'gauche':'droite';
   const lines=["Départ : main "+side(s.h0[0],s.h0[1])+" sur n°"+s.h0[0].h.n+" ("+s.h0[0].h.type+", "+s.h0[0].rho+"°), main "+side(s.h0[1],s.h0[0])+" sur n°"+s.h0[1].h.n+" ("+s.h0[1].h.type+", "+s.h0[1].rho+"°)"];
+  // Main réelle (et pas le côté) : chaque main garde son emplacement (slot) d'un mouvement à l'autre ; au départ,
+  // l'emplacement 0 tient h0[0]. Un croisé ne change pas la main qui bouge, seulement sa position. Après un lancer
+  // à deux mains, la main gauche est celle qui arrive sur la prise la plus à gauche.
+  {const ph=[side(s.h0[0],s.h0[1]),side(s.h0[1],s.h0[0])];if(ph[0]===ph[1])ph[1]=ph[0]==='gauche'?'droite':'gauche';
+    for(const m of s.mv){if(m.slot==null){m.main=m.side;continue}
+      if(m.pair){const L=m.o.x<=m.pair.o.x;ph[m.slot]=L?'gauche':'droite';ph[1-m.slot]=L?'droite':'gauche';m.main=ph[m.slot];continue}
+      m.main=ph[m.slot]}}
   const f0=fe.filter(q=>!s.mv.some(m=>m.nf.includes(q)));
   lines.push(f0.length?"  Pied"+(f0.length>1?"s":"")+" de départ : "+f0.map(q=>"n°"+q.h.n).join(", "):"  Pieds libres (pas de prise de pied)");
   s.mv.forEach(m=>{
@@ -238,7 +245,7 @@ function gen1(c){
       lines.push("Lancer à deux mains : main gauche → "+nm(a[0])+", main droite → "+nm(a[1])+" · dynamique");
       if(m.nf.length)lines.push("  Nouveau"+(m.nf.length>1?"x pieds":" pied")+" : "+m.nf.map(q=>"n°"+q.h.n+" ("+q.h.type+")").join(", "));return}
     const t=[];if(m.m.dyn)t.push("dynamique");if(m.m.cross)t.push("croisé");(m.tech||[]).forEach(c=>{if(c!=='dyno'&&c!=='dyno2'&&c!=='croise')t.push(techName(c))});
-    lines.push(m===s.mv[s.mv.length-1]?"Arrivée : main "+m.side+" sur n°"+m.h.n+" ("+m.h.type+", "+m.rho+"°), puis tcheck : les deux mains sur cette prise"+(t.length?" · "+t.join(", "):""):"Main "+m.side+" → n°"+m.h.n+" ("+m.h.type+", "+m.rho+"°)"+(t.length?" · "+t.join(", "):""));
+    lines.push(m===s.mv[s.mv.length-1]?"Arrivée : main "+m.main+" sur n°"+m.h.n+" ("+m.h.type+", "+m.rho+"°), puis tcheck : les deux mains sur cette prise"+(t.length?" · "+t.join(", "):""):"Main "+m.main+" → n°"+m.h.n+" ("+m.h.type+", "+m.rho+"°)"+(t.length?" · "+t.join(", "):""));
     if(m.nf.length)lines.push("  Nouveau"+(m.nf.length>1?"x pieds":" pied")+" : "+m.nf.map(q=>"n°"+q.h.n+" ("+q.h.type+")").join(", "));
   });
   const place=[...ho.map(x=>({n:x.h.n,type:x.h.type,pan:x.o.pan,c:x.o.c,r:x.o.r,hid:x.o.id,rho:x.rho})),...fe.map(q=>({n:q.h.n,type:q.h.type,pan:q.o.pan,c:q.o.c,r:q.o.r,hid:q.o.id,rho:q.rho||0,foot:1}))].sort((a,b)=>a.n-b.n);

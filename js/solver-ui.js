@@ -21,22 +21,24 @@ function rOf(){
   [S.f0,...S.mv.map(m=>m.ft)].forEach(l=>l.forEach(q=>{if(seen.has(q.o.id)||hands.some(h=>h.x===q.o.x&&h.y===q.o.y))return;seen.add(q.o.id);feet.push({n:q.h.n,x:q.o.x,y:q.o.y,rho:q.rho||0})}));
   return{hands,feet};
 }
-function drawSolveWall(){
-  const svg=$("wall"),x=AN.M[SEL.k],pts=[],ring=(o,cls,r)=>{pts.push(o);return`<circle class="${cls}" cx="${o.x}" cy="${Yc(o.y)}" r="${r||9}"/>`};
+// v49 : réutilisable par le mode pied du mur (svg, mouvement, diagnostic, zoom forcé, préfixe des flèches).
+function drawSolveWall(el,kk,dg,forceZoom,pre){
+  const svg=el||$("wall"),x=AN.M[kk==null?SEL.k:kk],pts=[],ring=(o,cls,r)=>{pts.push(o);return`<circle class="${cls}" cx="${o.x}" cy="${Yc(o.y)}" r="${r||9}"/>`};
+  const P=pre||"",DG_=dg===undefined?DG:dg,zoom=forceZoom||SEL.zoom;if(!svg)return;
   let ov="";
   x.pre.ft.forEach(q=>ov+=ring(q.o,"rg-foot",7.5));
   ov+=ring(x.fixed.o,"rg-fix",9.5);
   const a=x.prev.o,b=x.m.o;pts.push(a);
-  ov+=`<line class="mvline" x1="${a.x}" y1="${Yc(a.y)}" x2="${b.x}" y2="${Yc(b.y)}" marker-end="url(#ah)"/>`;
+  ov+=`<line class="mvline" x1="${a.x}" y1="${Yc(a.y)}" x2="${b.x}" y2="${Yc(b.y)}" marker-end="url(#${P}ah)"/>`;
   ov+=ring(b,"rg-tgt",11);if(x.m.pair)ov+=ring(x.m.pair.o,"rg-tgt",11);
-  if(DG&&DG.fs){const c=DG.fs.c.o;if(DG.fs.old)ov+=`<line class="ftline" x1="${DG.fs.old.o.x}" y1="${Yc(DG.fs.old.o.y)}" x2="${c.x}" y2="${Yc(c.y)}" marker-end="url(#ah2)"/>`;ov+=ring(c,"rg-sug",8.5)}
+  if(DG_&&DG_.fs){const c=DG_.fs.c.o;if(DG_.fs.old)ov+=`<line class="ftline" x1="${DG_.fs.old.o.x}" y1="${Yc(DG_.fs.old.o.y)}" x2="${c.x}" y2="${Yc(c.y)}" marker-end="url(#${P}ah2)"/>`;ov+=ring(c,"rg-sug",8.5)}
   const hp=x.hpX;pts.push(hp);ov+=`<g class="hip"><circle cx="${hp.x}" cy="${Yc(hp.y)}" r="5"/><text x="${hp.x}" y="${Yc(hp.y)+15}" text-anchor="middle">bassin</text></g>`;
-  const defs=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--ac)"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--ok)"/></marker></defs>`;
+  const defs=`<defs><marker id="${P}ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--ac)"/></marker><marker id="${P}ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--ok)"/></marker></defs>`;
   svg.innerHTML=defs+wallSVG(rOf())+ov;
-  if(SEL.zoom){const xs=pts.map(p=>p.x),ys=pts.map(p=>Yc(p.y));let x0=Math.min(...xs)-45,x1=Math.max(...xs)+45,y0=Math.min(...ys)-40,y1=Math.max(...ys)+40;
+  if(zoom){const xs=pts.map(p=>p.x),ys=pts.map(p=>Yc(p.y));let x0=Math.min(...xs)-45,x1=Math.max(...xs)+45,y0=Math.min(...ys)-40,y1=Math.max(...ys)+40;
     const w=Math.max(220,x1-x0),h=Math.max(200,y1-y0),cx=(x0+x1)/2,cy=(y0+y1)/2;svg.setAttribute("viewBox",`${f1(cx-w/2)} ${f1(cy-h/2)} ${f1(w)} ${f1(h)}`)}
   else svg.setAttribute("viewBox",vbFor("all"));
-  document.querySelectorAll("[data-zoom]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.zoom==="1")===SEL.zoom)));
+  if(!el)document.querySelectorAll("[data-zoom]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.zoom==="1")===SEL.zoom)));
 }
 
 // ---------- En-tête du bloc ----------
@@ -51,7 +53,7 @@ function renderHead(){
   const ck=AN.CHK,nb=ck.filter(c=>c.st==="bad").length,nw=ck.filter(c=>c.st==="warn").length;
   $("chk").innerHTML=`<summary>Vérifications automatiques : <b class="${nb?"tbad":nw?"twarn":"tok"}">${ck.length-nb-nw} sur ${ck.length} validées${nw?` · ${nw} à savoir`:""}${nb?` · ${nb} en échec`:""}</b></summary><ul class="chkl">${ck.map(c=>`<li><span class="pill ${c.st==="ok"?"pill-ok":c.st==="warn"?"pill-warn":"pill-bad"}">${c.st==="ok"?"validé":c.st==="warn"?"à savoir":"échec"}</span><b>${esc(c.name)}</b><span class="mut">${esc(c.detail)}</span></li>`).join("")}</ul>`;
   if(nb)$("chk").open=true;
-  h+=`<div class="lv"><span>Accord des deux modèles</span><b>${all.length?pcT(ag/all.length):"–"}</b><small>${dis.length?`désaccord aux mouvements ${dis.join(", ")}`:"aucun désaccord"}</small></div>`;
+  if(isDet())h+=`<div class="lv"><span>Accord des deux modèles</span><b>${all.length?pcT(ag/all.length):"–"}</b><small>${dis.length?`désaccord aux mouvements ${dis.join(", ")}`:"aucun désaccord"}</small></div>`;
   $("levels").innerHTML=h;
   const hd=AN.hard;$("feas").innerHTML=hd.length?`<div class="banner bad"><b>À ta morphologie, le modèle juge ce bloc infaisable tel quel.</b><ul>${hd.slice(0,3).map(t=>`<li>${esc(t)}</li>`).join("")}</ul><span>Le rapport cherche les variantes de pieds et de méthode qui contournent ces points.</span></div>`:"";
 }
@@ -80,17 +82,18 @@ function report(){
   const CMP=AN.CMP[k],T=trustTable(),MC=mergeCauses(DG,CMP,x,SEL.sym),C=MC.filter(c=>c.score>=.2).slice(0,3);
   const trustTag=c=>!c.dis?"":c.trust?`<span class="pill ${c.trust==="m1"?"pill-ok":"pill-sym"}">chez toi, le ${c.trust==="m1"?"moteur du générateur":"second modèle"} est le plus fiable ici</span>`:'<span class="pill pill-warn">incertain : les deux modèles divergent</span>';
   h+=`<section><h3>Pourquoi ça coince</h3>`;
-  if(C.length)h+=`<ol class="causes">${C.map(c=>`<li><div class="ch"><b>${esc(CAUSEN[c.id])}</b><span class="meter" aria-label="poids ${Math.round(c.score*100)} sur 100"><i style="width:${Math.round(c.score*100)}%"></i></span>${c.sym?'<span class="pill pill-sym">ton ressenti</span>':""}${c.weak?'<span class="pill pill-weak">point faible déclaré</span>':""}${c.src==="m2"?'<span class="pill">vu par le second modèle</span>':""}${trustTag(c)}</div><p>${esc(c.why)}</p></li>`).join("")}</ol>`;
+  if(C.length)h+=`<ol class="causes">${C.map(c=>`<li><div class="ch"><b>${esc(CAUSEN[c.id])}</b><span class="meter" aria-label="poids ${Math.round(c.score*100)} sur 100"><i style="width:${Math.round(c.score*100)}%"></i></span>${c.sym?'<span class="pill pill-sym">ton ressenti</span>':""}${c.weak?'<span class="pill pill-weak">point faible déclaré</span>':""}${isDet()&&c.src==="m2"?'<span class="pill">vu par le second modèle</span>':""}${isDet()?trustTag(c):""}</div><p>${esc(causeWhy(c))}</p></li>`).join("")}</ol>`;
   else{const P=partsTxt(x);h+=`<p class="mut">Aucun point mécanique saillant à ta taille. Ce qui pèse le plus dans ce mouvement : ${P.map(p=>`${p.lab} (${pcT(p.p)})`).join(", ")}.</p>`}
   DG.miss.forEach(s=>{if(MISS[s])h+=`<p class="note">« ${esc(SYM[s])} » : ${esc(MISS[s])}</p>`});
   h+=`</section>`;
   // essais
   const F=fixesOf({C:MC},workedCount()),fc=DG.fs?m2CheckFeet(x,DG.fs):null;CUR={k,C,F,CMP};
-  if(F.length)h+=`<section><h3>À essayer, dans cet ordre</h3><ol class="fixes">${F.map(f=>`<li><span>${esc(f.t)}${f.key==="foot"&&fc?` <span class="pill ${fc.ok?"pill-ok":"pill-warn"}">${fc.ok?"confirmé par le second modèle":"non confirmé par le second modèle"}</span>${fc.ok&&fc.g.length?`<span class="mut"> (${esc(fc.g.join(", "))})</span>`:""}`:""}${f.won?` <span class="pill pill-ok">a déjà marché pour toi${f.won>1?" ×"+f.won:""}</span>`:""}</span></li>`).join("")}</ol></section>`;
+  if(F.length)h+=`<section><h3>À essayer, dans cet ordre</h3><ol class="fixes">${F.map(f=>`<li><span>${esc(fixTxt(f))}${isDet()&&f.key==="foot"&&fc?` <span class="pill ${fc.ok?"pill-ok":"pill-warn"}">${fc.ok?"confirmé par le second modèle":"non confirmé par le second modèle"}</span>${fc.ok&&fc.g.length?`<span class="mut"> (${esc(fc.g.join(", "))})</span>`:""}`:""}${f.won?` <span class="pill pill-ok">a déjà marché pour toi${f.won>1?" ×"+f.won:""}</span>`:""}</span></li>`).join("")}</ol></section>`;
   // contre-expertise
-  const ag=CMP.filter(c=>c.agree).length,det=SP.detail!=="ess";
+  const ag=CMP.filter(c=>c.agree).length,det=isDet();
+  // Essentiel (v49) : pas de contre-expertise ; seuls les points où l'appli hésite restent, sous forme de petit test.
   if(!det){const D=CMP.filter(c=>!c.agree);
-    h+=`<section><h3>Contre-expertise</h3><p>Le second modèle concorde sur <b>${ag} point${ag>1?"s":""} sur ${CMP.length}</b>${CMP.some(c=>c.agree&&c.a)?` (problème confirmé : ${CMP.filter(c=>c.agree&&c.a).map(c=>esc(c.q.toLowerCase())).join(", ")})`:""}.</p>${D.length?`<ul class="cmpl">${D.map(c=>{const w=trustWho(c.q,T);return`<li><b>${esc(c.q)}</b> : générateur « ${esc(c.ta)} », second modèle « ${esc(c.tb)} ». <span class="mut">${esc(w.txt)}</span> ${testCell(c,k,x)}${TESTQ===c.q?`<table class="cmp"><tbody>${testRow(c,k,x)}</tbody></table>`:""}</li>`}).join("")}</ul>`:""}</section>`}
+    if(D.length)h+=`<section><h3>Un petit test pour affiner</h3><p class="mut">Sur ${D.length>1?"ces points":"ce point"}, l'appli hésite. Un essai de quelques secondes lui apprend ce qui est vrai pour toi.</p><ul class="cmpl">${D.map(c=>`<li><b>${esc(c.q)}</b> ${testCell(c,k,x)}${TESTQ===c.q?`<table class="cmp"><tbody>${testRow(c,k,x)}</tbody></table>`:""}</li>`).join("")}</ul></section>`}
   else h+=`<section><h3>Contre-expertise</h3><p class="mut">Un second modèle, construit autrement (posture en 3D, équilibre complet des forces et des moments, frottement des pieds, cône de tenue de chaque prise), relit le même mouvement. Il concorde sur ${ag} point${ag>1?"s":""} sur ${CMP.length}.${CMP.some(c=>!c.agree)?" Là où ils divergent, le résolveur s'appuie sur celui qui a eu raison le plus souvent chez toi, d'après tes blocages débloqués.":""}</p>
     <div class="tw"><table class="cmp"><thead><tr><th>Question</th><th>Moteur du générateur</th><th>Second modèle</th><th>Verdict</th></tr></thead><tbody>${CMP.map(c=>{const w=c.agree?null:trustWho(c.q,T);return`<tr><td><b>${esc(c.q)}</b></td><td>${esc(c.ta)}</td><td>${esc(c.tb)}</td><td>${c.agree?`<span class="pill ${c.a?"pill-bad":"pill-ok"}">${c.a?"problème confirmé":"concordant"}</span>`:`<span class="pill pill-warn">désaccord</span><div class="mut">${w.who?"S'appuyer sur : ":""}${esc(w.txt)}</div>${testCell(c,k,x)}`}</td></tr>${TESTQ===c.q&&!c.agree?testRow(c,k,x):""}`}).join("")}</tbody></table></div></section>`;
   // prises et pieds
@@ -115,7 +118,7 @@ function report(){
   if(x.minStab!=null)me.push(["Pied le plus faible",`stabilité ${Math.round(x.minStab*100)} / 100`]);
   me.push(["Ce qui pèse",P.map(p=>`${p.lab} ${pcT(p.p)}`).join(" · ")]);
   if(det)h+=`<section><h3>Mesures du moteur du générateur</h3><dl class="kv kv-num">${me.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl></section>`;
-  else h+=`<p class="mut">Rapport essentiel : passe en « Détaillé » pour les mesures, la contre-expertise point par point et les textes anatomiques complets.</p>`;
+  else h+=`<p class="mut">Rapport essentiel : passe en « Détaillé » pour les mesures, l'avis du second modèle point par point et les textes anatomiques complets.</p>`;
   $("report").innerHTML=h;
 }
 function reportText(){
@@ -147,7 +150,7 @@ function afterHist(){calReplay();refresh();renderHist()}
 function renderAll(){
   const max=Math.max(...AN.M.map(x=>x.cost));
   $("all").innerHTML=AN.M.map((x,k)=>{const al=(AN.v3.notes||[]).filter(n=>n.k===k),hard=AN.hard.some(t=>t.indexOf("Mouvement "+(k+1)+" ")===0||t.indexOf("Mouvement "+(k+1)+" :")===0);
-    return`<tr data-k="${k}" class="${k===SEL.k?"on":""}"><td class="num">${k+1}</td><td>${esc(stepTitle(k))}${(x.m.tech||[]).length?`<div class="mut">${x.m.tech.map(techName).map(esc).join(" · ")}</div>`:""}</td><td class="barc"><span class="meter"><i style="width:${Math.round(100*x.cost/max)}%"></i></span></td><td>${hard?'<span class="pill pill-bad">infaisable</span>':""}${al.some(n=>n.lvl==="alerte")?'<span class="pill pill-bad">alerte</span>':al.length?'<span class="pill pill-warn">vigilance</span>':""}${k===AN.crux?'<span class="pill pill-key">clé</span>':""}${AN.CMP[k].some(c=>!c.agree)?`<span class="pill pill-warn">désaccord ×${AN.CMP[k].filter(c=>!c.agree).length}</span>`:""}</td></tr>`}).join("");
+    return`<tr data-k="${k}" class="${k===SEL.k?"on":""}"><td class="num">${k+1}</td><td>${esc(stepTitle(k))}${(x.m.tech||[]).length?`<div class="mut">${x.m.tech.map(techName).map(esc).join(" · ")}</div>`:""}</td><td class="barc"><span class="meter"><i style="width:${Math.round(100*x.cost/max)}%"></i></span></td><td>${hard?'<span class="pill pill-bad">infaisable</span>':""}${al.some(n=>n.lvl==="alerte")?'<span class="pill pill-bad">alerte</span>':al.length?'<span class="pill pill-warn">vigilance</span>':""}${k===AN.crux?'<span class="pill pill-key">clé</span>':""}${AN.CMP[k].some(c=>!c.agree)?(isDet()?`<span class="pill pill-warn">désaccord ×${AN.CMP[k].filter(c=>!c.agree).length}</span>`:`<span class="pill pill-warn">à tester</span>`):""}</td></tr>`}).join("");
   $("all").querySelectorAll("tr").forEach(tr=>tr.onclick=()=>{SEL.k=+tr.dataset.k;update();$("wallp").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"})});
 }
 
@@ -241,8 +244,8 @@ function init(){
 function keepCur(extra){const e=Object.assign({ts:Date.now(),bid:BID,k:SEL.k,title:`${B.seed?"Bloc "+B.seed:"Bloc"} · mouvement ${SEL.k+1}`,sym:[...SEL.sym],causes:CUR.C.slice(0,2).map(c=>c.id),
     cmp:CUR.CMP.map(c=>({q:c.q,a:c.a,b:c.b})),fixes:CUR.F.map(f=>({key:f.key,t:f.t})),hn:AN.M[SEL.k].m.h.n,done:false},extra||{});histAdd(e);return e}
 // Rapport essentiel ou détaillé (4.6), et accès au mode pied du mur (4.2, wallmode.js).
-function bindRmode(){const d=$("rmode");if(!d)return;const draw=()=>d.querySelectorAll("[data-rm]").forEach(b=>b.setAttribute("aria-pressed",String((SP.detail==="ess"?"ess":"det")===b.dataset.rm)));
-  d.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{SP.detail=b.dataset.rm==="ess"?"ess":"det";saveProf();draw();report();bindTests()});draw();
+function bindRmode(){const d=$("rmode");if(!d)return;const draw=()=>d.querySelectorAll("[data-rm]").forEach(b=>b.setAttribute("aria-pressed",String((SP.detail==="det"?"det":"ess")===b.dataset.rm)));
+  d.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{SP.detail=b.dataset.rm==="ess"?"ess":"det";saveProf();draw();renderHead();report();bindTests();renderAll()});draw();
   const w=$("wmopen");if(w)w.onclick=()=>wmOpen()}
 // ---------- Notes du générateur (même stockage) ----------
 function renderNotesImp(){

@@ -17,7 +17,7 @@ function seqOf(s){
     mv:s.mv.map((m,k)=>({
       hand:bcRef({o:m.o,h:m.h,rho:m.rho}),fixed:bcRef(m.ot),pair:m.pair?bcRef(m.pair):null,
       hd:(m.hd||[]).map(bcRef),ft:(m.ft||[]).map(bcRef),
-      dyn:!!(m.m&&m.m.dyn),cross:!!(m.m&&m.m.cross),tech:m.tech||[],side:m.side,flag:m.flag&&m.flag.stand?bcRef(m.flag.stand):null,finish:k===last
+      dyn:!!(m.m&&m.m.dyn),cross:!!(m.m&&m.m.cross),tech:m.tech||[],side:m.side,main:m.main||null,flag:m.flag&&m.flag.stand?bcRef(m.flag.stand):null,finish:k===last
     }))
   };
 }
