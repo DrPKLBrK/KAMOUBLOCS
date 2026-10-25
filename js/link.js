@@ -37,6 +37,12 @@ function renderSolveCal(){
 renderNotes=(function(base){return function(){base();renderSolveCal()}})(renderNotes);
 
 // 4) Ouvrir le résolveur sur un code de bloc (onglet séparé, ou fenêtre intégrée dans le fichier unique).
+// v50 : la ligne « Contrôle de faisabilité » du générateur ouvre le résolveur sur ce contrôle, déplié.
+document.addEventListener("click",e=>{const b=e.target&&e.target.closest&&e.target.closest("#v3go");if(!b||typeof cur==="undefined"||!cur)return;
+  try{localStorage.setItem("solve_feasopen","1")}catch(x){}openSolver(blockCode(cur))});
+// v50 : impression complète même si le déroulé est replié
+addEventListener("beforeprint",()=>{const d=document.getElementById("seqbox");if(d&&!d.open){d.open=true;d.dataset.pr="1"}});
+addEventListener("afterprint",()=>{const d=document.getElementById("seqbox");if(d&&d.dataset.pr){d.open=false;delete d.dataset.pr}});
 function openSolver(code){
   try{if(code)localStorage.setItem("solve_in",code)}catch(e){}
   // fichier unique : résolveur embarqué ; appli installée (plein écran) : fenêtre intégrée, pour rester dans l'appli

@@ -41,6 +41,21 @@ function drawSolveWall(el,kk,dg,forceZoom,pre){
   if(!el)document.querySelectorAll("[data-zoom]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.zoom==="1")===SEL.zoom)));
 }
 
+// ---------- Contrôle de faisabilité (v50 : déplacé depuis le générateur, recalculé à ta taille) ----------
+function renderFeas(){
+  const d=$("feasd");if(!d||!AN||!AN.v3)return;const wasOpen=d.open;
+  const v=AN.v3,nt=v.notes||[],w=AN.soft||[],by={};nt.forEach(n=>(by[n.j]=by[n.j]||[]).push(n));
+  const tot=nt.length+w.length,al=nt.filter(n=>n.lvl==="alerte").length,H=fr(SP.H/100,2);
+  const js=Object.keys(JOINTS).sort((a,b)=>(SP.sens.includes(b)-SP.sens.includes(a))||((by[b]||[]).length-(by[a]||[]).length));
+  const cnt=js.filter(j=>by[j]).map(j=>`${JOINTS[j].split(" (")[0].toLowerCase()} ${by[j].length}`).join(", ");
+  let h=`<summary>Contrôle de faisabilité à ta taille (${H} m) : <b class="${tot?(al?"twarn":""):"tok"}">${tot?tot+" point"+(tot>1?"s":"")+" à surveiller":"rien à signaler"}</b>${cnt?` <span class="mut">(${esc(cnt)})</span>`:""}</summary>`;
+  h+=`<p class="mut">Chaque position du bloc est simulée à ta taille. Voici ce qui sera le plus sollicité, articulation par articulation${SP.sens.length?" (tes zones sensibles d'abord)":""}.</p>`;
+  h+=js.map(j=>{const l=by[j];return`<div class="ana"><h4>${esc(JOINTS[j])} <span class="cnt${l?"":" zero"}">${l?l.length:"RAS"}</span>${SP.sens.includes(j)?' <span class="pill pill-weak">zone sensible</span>':""}</h4>${l?"<ul>"+l.map(n=>`<li><div class="anah"><b>Mouvement ${n.k+1}</b> <span class="fzl ${n.lvl}">${n.lvl==="alerte"?"Alerte":"Vigilance"}</span></div>${esc(n.txt)}</li>`).join("")+"</ul>":'<p class="mut">Rien de particulier sur ce bloc.</p>'}</div>`}).join("");
+  if(w.length)h+=`<div class="ana"><h4>Équilibre, appuis et réceptions <span class="cnt">${w.length}</span></h4><ul>${w.slice(0,10).map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>`;
+  h+=`<p class="mut">${al?`<b>${al} alerte${al>1?"s":""}</b> : à aborder avec prudence. `:""}Ce sont des estimations biomécaniques de tendance, pas un avis médical : échauffe-toi bien (doigts et épaules), progresse par étapes et arrête-toi à la moindre douleur articulaire.</p>`;
+  d.innerHTML=h;let op=wasOpen;try{if(localStorage.getItem("solve_feasopen")==="1"){op=true;localStorage.removeItem("solve_feasopen")}}catch(e){}d.open=op;
+}
+
 // ---------- En-tête du bloc ----------
 function renderHead(){
   const n=S.mv.length,crux=AN.crux,H=fr(SP.H/100,2);
@@ -55,6 +70,7 @@ function renderHead(){
   if(nb)$("chk").open=true;
   if(isDet())h+=`<div class="lv"><span>Accord des deux modèles</span><b>${all.length?pcT(ag/all.length):"–"}</b><small>${dis.length?`désaccord aux mouvements ${dis.join(", ")}`:"aucun désaccord"}</small></div>`;
   $("levels").innerHTML=h;
+  renderFeas();
   const hd=AN.hard;$("feas").innerHTML=hd.length?`<div class="banner bad"><b>À ta morphologie, le modèle juge ce bloc infaisable tel quel.</b><ul>${hd.slice(0,3).map(t=>`<li>${esc(t)}</li>`).join("")}</ul><span>Le rapport cherche les variantes de pieds et de méthode qui contournent ces points.</span></div>`:"";
 }
 const deIt=t=>/^une? /.test(t)?"d'"+t:/^le /.test(t)?"du "+t.slice(3):/^les /.test(t)?"des "+t.slice(4):"de "+t;

@@ -79,7 +79,8 @@ function judgeHTML(r){
   const L=j.issues.slice(0,4).map(i=>`<li>Mouvement ${i.k+1}${i.size?" (à "+i.size+")":""} : ${esc(i.txt)}</li>`).join("");
   return`<div class="m2warn"><b>Le second modèle doute de ce bloc</b> (aucun autre candidat n'est passé dans le temps imparti) :<ul>${L}</ul><span class="mut">Ouvre-le dans le résolveur pour voir le détail, ou génère-en un autre.</span></div>`;
 }
-show=(function(base){return function(r){base(r);const v=$("v3"),vs=$("v3sum");if(!r||!v)return;const h=judgeHTML(r);if(h)v.insertAdjacentHTML("afterbegin",h);
+show=(function(base){return function(r){base(r);const v=$("v3"),vs=$("v3sum"),vw=$("v3warn");if(vw)vw.innerHTML="";if(!r||!v)return;const h=judgeHTML(r);if(h)v.insertAdjacentHTML("afterbegin",h);
+  if(vw&&r.m2&&judgeOn()&&!r.m2.ok&&!r.m2.err)vw.innerHTML=h; // v50 : le doute du second modèle reste visible sous la ligne
   if(vs&&r.m2&&judgeOn()&&!r.m2.err)vs.textContent+=CFG.expert?(r.m2.ok?" · second modèle : d'accord":" · second modèle : doute"):(r.m2.ok?" · double vérification : OK":" · double vérification : doute")}})(show);
 tabAff=(function(base){return function(){return base()+`<div class="row"><label class="sw"><input type="checkbox" id="m2judge"${judgeOn()?" checked":""}><span>Contre-expertise par le second modèle pendant la génération</span></label><span class="mut">Écarte les blocs que le modèle indépendant du résolveur juge impossibles. Génération un peu plus lente.</span></div>`}})(tabAff);
 renderTab=(function(base){return function(f){base(f);const c=$("m2judge");if(c)c.onchange=e=>ss(JG_USE,e.target.checked)}})(renderTab);

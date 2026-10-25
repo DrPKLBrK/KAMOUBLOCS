@@ -141,7 +141,13 @@ ul.hist button[aria-pressed=true]{background:var(--okbg);color:var(--okfg);borde
 .ver{font:500 .45em var(--body);color:var(--mut)}
 a.btnl{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--fg);text-decoration:none;font-weight:600;background:var(--card)}a.btnl:hover{border-color:var(--ac)}
 .bk>summary{font:700 1rem var(--display)}.bk{display:flex;flex-direction:column;gap:8px}
-details.chk{margin-top:10px;font-size:.95rem}.chkl{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+details.chk{margin-top:10px;font-size:.95rem}
+/* v50 : contrôle de faisabilité (venu du générateur), recalculé à ta taille */
+.feasd .ana{border-top:1px solid var(--line);padding:8px 0}.feasd .ana h4{margin:0 0 4px;display:flex;gap:8px;align-items:center;font-size:.95rem}
+.feasd .ana ul{margin:4px 0 0;padding-left:18px;display:grid;gap:8px}.feasd .ana li{line-height:1.4}.feasd .anah{font-size:.85rem;margin-bottom:2px}
+.feasd .cnt{font:700 .8rem var(--body);background:var(--acsoft);color:var(--fg);border-radius:20px;padding:1px 9px}.feasd .cnt.zero{background:var(--soft);color:var(--mut)}
+.feasd .fzl{font:600 .75rem var(--body);border-radius:20px;padding:1px 8px}.feasd .fzl.vigilance{background:#fdecc8;color:#6b4300}.feasd .fzl.alerte{background:#fbd5d1;color:#7a1710}
+.feasd>summary b.tok{color:var(--ok)}.feasd>summary b.twarn{color:var(--warn)}.feasd>p{margin:8px 0}.chkl{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
 .chkl li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 8px;align-items:baseline}.chkl li .mut{grid-column:2}
 .tok{color:var(--ok)}.twarn{color:var(--warn)}.tbad{color:var(--bad)}
 .hrow{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:space-between;align-items:center;width:100%}
@@ -187,7 +193,7 @@ html.wmonly .page{visibility:hidden} /* ouvert depuis le mode grimpeur : seul le
 </style>
 <div class="page">
 <header class="top">
-  <div><h1>Résolveur de blocs <small class="ver">v49</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
+  <div><h1>Résolveur de blocs <small class="ver">v50</small></h1><p class="sub">Le bloc est relu par le moteur du générateur à ta taille, puis contre-expertisé par un second modèle construit autrement. Le rapport porte sur le mouvement où tu coinces.</p></div>
   <div class="acts"><a class="btnl" id="togen" href="index.html">Générateur</a></div>
 </header>
 
@@ -196,6 +202,7 @@ html.wmonly .page{visibility:hidden} /* ouvert depuis le mode grimpeur : seul le
   <div class="bmeta" id="bmeta"></div>
   <div class="levels" id="levels"></div>
   <details class="chk" id="chk"></details>
+  <details class="chk feasd" id="feasd"></details>
   <div id="feas"></div>
   <details class="ld" id="ld"><summary>Changer de bloc</summary>
     <p class="mut">Dans le générateur, sous le bloc : « Résoudre ce bloc » l'ouvre directement ici. Tu peux aussi ouvrir un fichier exporté (« Exporter (.json) », en mode expert) ou coller un code de bloc.</p>

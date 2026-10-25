@@ -35,13 +35,16 @@ function show(r){
     if(ms){ms.innerHTML='<span class="err">Aucun bloc trouvé avec ces réglages</span>';const d=$("metd");if(d)d.open=true}
     if(typeof renderCodeBar==='function')renderCodeBar(null);
     m.innerHTML='<span class="err">Aucun bloc trouvé avec ces réglages. Élargis le niveau, change de style, de zone ou réactive des prises.</span>';
-    q.innerHTML="";$("mont").innerHTML="";$("prog").textContent="";v.innerHTML="";vs.textContent="";if(typeof renderRate==='function')renderRate();return;
+    q.innerHTML="";{const ss_=$("seqsum");if(ss_)ss_.textContent=""}$("mont").innerHTML="";$("prog").textContent="";v.innerHTML="";vs.textContent="";if(typeof renderRate==='function')renderRate();return;
   }
   const chip=(k,t)=>`<span class="chip"><i>${k}</i>${t}</span>`;
   // résumé d'une ligne (en-tête repliable) : le détail des puces s'ouvre au clic
   if(ms){const g=typeof gradeTxt==="function"?gradeTxt(r.idx):null;ms.innerHTML=`${esc(lab(r.idx))}${g?" · ≈ "+esc(g.g):""} · ${esc(KINDN[r.kind]||"")} · ${r.moves} mouvements${r.note?' · <span class="err">'+esc(r.noteShort||"niveau à vérifier")+'</span>':""}`;const d=$("metd");if(d)d.open=ls("metopen",false)===true}
   m.innerHTML=chip("Niveau",lab(r.idx))+(typeof gradeTxt==="function"?(g=>`<span class="chip" title="${esc(g.note)}"><i>Cotation</i>≈ ${g.g}${GRF&&GRF.personal?"":" ?"}</span>`)(gradeTxt(r.idx)):"")+chip("Parcours",KINDN[r.kind])+chip("Mouvement",MVN[r.mv])+chip("Prises",HSN[r.hs])+chip("Mains",r.moves+" mouvements")+(r.key?chip("Passage clé","mouvement "+(r.key.k+1)):"")+chip("Lancers",r.dy)+chip("Croisés",r.cr)+(r.techs&&Object.keys(r.techs).some(k=>!["dyno","dyno2","croise"].includes(k))?chip("Gestes",Object.entries(r.techs).filter(([k])=>!["dyno","dyno2","croise"].includes(k)).map(([k,v])=>techName(k)+(v>1?" ×"+v:"")).join(", ")):"")+chip("Étalement",r.span.w+" × "+r.span.h+" cm")+(r.note?`<span class="err">${esc(r.note)}</span>`:"");
   q.innerHTML=seqHtml(r.lines,r.key?r.key.k+1:-1);
+  // v50 : déroulé replié par défaut, avec un résumé d'une ligne (départ, nombre de mouvements, arrivée, passage clé)
+  {const ss_=$("seqsum");if(ss_){const st=(r.hands||[]).filter(h=>h.role==="start").map(h=>"n°"+h.n),fi=(r.hands||[]).find(h=>h.role==="finish");
+    ss_.textContent=`Départ ${st.join(" + ")} · ${r.moves} mouvements${fi?" · arrivée n°"+fi.n:""}${r.key?" · passage clé : mouvement "+(r.key.k+1):""}`}}
   if(typeof renderCodeBar==='function')renderCodeBar(r);
   renderMount();if(typeof renderRate==='function')renderRate();
   if(r.v3)renderAna(r,vs,v);
@@ -53,7 +56,7 @@ function renderAna(r,vs,v){
   nt.forEach(n=>(by[n.j]=by[n.j]||[]).push(n));
   const tot=nt.length+w.length,al=nt.filter(n=>n.lvl==="alerte").length;
   const cnt=Object.keys(JOINTS).filter(j=>by[j]).map(j=>`${JOINTS[j].split(" (")[0].toLowerCase()} ${by[j].length}`).join(", ");
-  vs.textContent=`${r.v3.n} positions vérifiées · ${tot?tot+" point"+(tot>1?"s":"")+" à surveiller"+(cnt?" ("+cnt+")":""):"rien à signaler"}`;
+  vs.textContent=`${PROF.on?"pour ton profil":"à 1,50 m et 1,90 m"} · ${r.v3.n} positions vérifiées · ${tot?tot+" point"+(tot>1?"s":"")+" à surveiller"+(cnt?" ("+cnt+")":""):"rien à signaler"}`;
   let h=`<p>Le bloc a été simulé position après position pour ${PROF.on?"un grimpeur de "+(PROF.H/100).toFixed(2).replace(".",",")+" m (envergure "+PROF.ape.toFixed(2).replace(".",",")+", souplesse "+PROF.flex.toFixed(2).replace(".",",")+", force des doigts "+PROF.force.toFixed(2).replace(".",",")+")":"un petit (1,50 m) et un grand (1,90 m) grimpeur"}. Les mouvements impossibles ou dangereux sont écartés d'office. Ce qui reste est analysé articulation par articulation : voici ce qui sera le plus sollicité. Marge d'équilibre : <b>${Math.round(Math.max(-99,r.v3.margin)*100)} %</b> (plus c'est haut, plus c'est confortable).</p>`;
   h+=Object.keys(JOINTS).map(j=>{
     const l=by[j];
